@@ -6,7 +6,8 @@ class Vertex:
         self.name = ''
 
     def addNeighbour(self, v):
-        self.neighbours.append([v, 1])
+        if [v, 1] not in self.neighbours:
+            self.neighbours.append([v, 1])
 
     def getNeighbours(self):
         return self.neighbours

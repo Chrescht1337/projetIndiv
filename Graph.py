@@ -15,6 +15,7 @@ class Graph:
         self.minClientDemand = 3
         self.maxClientDemand = 7
         self.graphDemand = 0
+        self.maxDistance = dimI
 
     def generateClients(self):
         for i in range(self.dimI):
@@ -27,7 +28,7 @@ class Graph:
         self.graph = deepcopy(self.clients)
 
     def createFeeders(self):
-        pow = self.graphDemand // self.dimI + 1
+        pow = self.graphDemand  # // self.dimI + 1
         for i in range(0, self.dimI, 2):
             j = randint(1, self.dimJ - 1)
             feeder = Feeder(i, j, pow)
@@ -42,6 +43,24 @@ class Graph:
             for j in range(1, self.dimJ - 1):
                 for k in range(len(iRange)):
                     self.graph[i][j].addNeighbour(self.graph[i + iRange[k]][j + jRange[k]])
+                    self.graph[i + iRange[k]][j + jRange[k]].addNeighbour(self.graph[i][j])
+
+        for j in range(len(self.graph[0]) - 1):
+            # for the first line
+            self.graph[0][j].addNeighbour(self.graph[0][j + 1])
+            self.graph[0][j + 1].addNeighbour(self.graph[0][j])
+            # for the last line
+            self.graph[-1][j].addNeighbour(self.graph[-1][j + 1])
+            self.graph[-1][j + 1].addNeighbour(self.graph[-1][j])
+
+        for i in range(len(self.graph) - 1):
+            # for the first column
+            self.graph[i][0].addNeighbour(self.graph[i + 1][0])
+            self.graph[i + 1][0].addNeighbour(self.graph[i][0])
+            # for the last column
+            self.graph[i][-1].addNeighbour(self.graph[i + 1][-1])
+            self.graph[i + 1][-1].addNeighbour(self.graph[i][-1])
+
 
     def getClientSet(self):
         clients = 'set CLIENTS := '
@@ -54,20 +73,55 @@ class Graph:
     def getFeederSet(self):
         feeders = 'set FEEDERS := '
         for f in range(len(self.feeders)):
-            feeders += self.feeders[f] + ' '
+            feeders += str(self.feeders[f]) + ' '
         feeders += ";\n"
         return feeders
+
+    def getNeighbours(self):
+        text = 'param: LINKS: hopcost:=\n'
+        for row in self.graph:
+            for v in row:
+                neighbours = v.getNeighbours()
+                for (n, hops) in neighbours:
+                    text += str(v) + ' ' + str(n) + ' ' + str(hops) + ', '
+                text += '\n'
+        text = text[:-3] + ';\n'
+        return text
+
+    def getClientDemand(self):
+        t = 'param demand :=\n'
+        for row in self.clients:
+            for c in row:
+                t += str(c) + ' ' + str(c.getDemand()) + '\n'
+        t += ';\n'
+        return t
+
+    def getFeederPower(self):
+        t = 'param power :='
+        for f in self.feeders[:-1]:
+            t += str(f) + ' ' + str(f.getPower()) + ', '
+        t += str(self.feeders[-1]) + ' ' + str(self.feeders[-1].getPower()) + ';\n'
+        return t
+
+    def getMaxDistance(self):
+        t = 'param max_distance :=' + str(self.maxDistance) + ';\n'
+        return t
+
 
     def __str__(self):
         return self.getClientSet()
 
     def writeToFile(self, filename):
         try:
-            f = open(filename, 'a')
             data = ''
             data += self.getClientSet()
             data += self.getFeederSet()
+            data += self.getClientDemand()
+            data += self.getFeederPower()
+            data += self.getNeighbours()
+            data += self.getMaxDistance()
 
+            f = open(filename, 'w')
             f.write(data)
             f.close()
         except IOError:

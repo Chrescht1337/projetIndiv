@@ -1,6 +1,9 @@
 from Graph import *
 
 if __name__ == "__main__":
-    g = Graph(5, 5)
+    dataFile = "graph.dat"
+    g = Graph(10, 10)
     g.generateClients()
-    print(g)
+    g.createFeeders()
+    g.connectNeighbours()
+    g.writeToFile(dataFile)
