@@ -6,4 +6,6 @@ if __name__ == "__main__":
     g.generateClients()
     g.createFeeders()
     g.connectNeighbours()
+    g.createAdjMat()
+    g.Floyd()
     g.writeToFile(dataFile)

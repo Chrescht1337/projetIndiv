@@ -1,6 +1,5 @@
 from copy import deepcopy
 from random import randint
-
 from Client import *
 from Feeder import *
 
@@ -10,6 +9,7 @@ class Graph:
         self.dimI = dimI
         self.dimJ = dimJ
         self.graph = []
+        self.adjacencyMatrix = dict()
         self.clients = []
         self.feeders = []
         self.minClientDemand = 3
@@ -61,6 +61,37 @@ class Graph:
             self.graph[i][-1].addNeighbour(self.graph[i + 1][-1])
             self.graph[i + 1][-1].addNeighbour(self.graph[i][-1])
 
+    def createAdjMat(self):
+        for i in range(len(self.graph)):
+            for j in range(len(self.graph[i])):
+                currentV = self.graph[i][j]
+                self.adjacencyMatrix[currentV] = dict()
+                self.adjacencyMatrix[currentV][currentV] = 0
+                neighbours = currentV.getNeighbours()
+                for v, dist in neighbours.items():
+                    self.adjacencyMatrix[currentV][v] = dist
+
+    def Floyd(self):
+        infinity = float("inf")
+        for k in range(len(self.graph)):
+            for kk in range(len(self.graph[k])):
+                kVertex = self.graph[k][kk]
+                for x in range(len(self.graph)):
+                    for xx in range(len(self.graph[x])):
+                        xVertex = self.graph[x][xx]
+                        if self.adjacencyMatrix[xVertex].get(kVertex, infinity) < infinity:
+                            for y in range(len(self.graph)):
+                                for yy in range(len(self.graph[y])):
+                                    yVertex = self.graph[y][yy]
+                                    if self.adjacencyMatrix[kVertex].get(yVertex,
+                                                                         infinity) < infinity:
+                                        if self.adjacencyMatrix[xVertex][kVertex] + \
+                                                self.adjacencyMatrix[kVertex][yVertex] < \
+                                                self.adjacencyMatrix[xVertex].get(yVertex,
+                                                                                  infinity):
+                                            self.adjacencyMatrix[xVertex][yVertex] = \
+                                                self.adjacencyMatrix[xVertex][kVertex] + \
+                                                self.adjacencyMatrix[kVertex][yVertex]
 
     def getClientSet(self):
         clients = 'set CLIENTS := '
@@ -77,16 +108,32 @@ class Graph:
         feeders += ";\n"
         return feeders
 
-    def getNeighbours(self):
+    def getHopCounts(self):
         text = 'param: LINKS: hopcost:=\n'
-        for row in self.graph:
-            for v in row:
-                neighbours = v.getNeighbours()
-                for (n, hops) in neighbours:
-                    text += str(v) + ' ' + str(n) + ' ' + str(hops) + ', '
-                text += '\n'
-        text = text[:-3] + ';\n'
+        for i in range(len(self.graph)):
+            for j in range(len(self.graph[i])):
+                v1 = self.graph[i][j]
+                for k in range(len(self.graph)):
+                    for m in range(len(self.graph[k])):
+                        v2 = self.graph[k][m]
+                        if v1 != v2:
+                            text+= str(v1) + ' ' + str(v2) + ' ' + str(self.adjacencyMatrix[v1][v2])+ ','
+                            text += '\n'
+        text = text[:-2] + ';\n'
         return text
+
+
+
+
+        #
+        # for row in self.graph:
+        #     for v in row:
+        #         neighbours = v.getHopCounts()
+        #         for (n, hops) in neighbours.items():
+        #             text += str(v) + ' ' + str(n) + ' ' + str(hops) + ', '
+        #         text += '\n'
+        # text = text[:-3] + ';\n'
+        # return text
 
     def getClientDemand(self):
         t = 'param demand :=\n'
@@ -107,7 +154,6 @@ class Graph:
         t = 'param max_distance :=' + str(self.maxDistance) + ';\n'
         return t
 
-
     def __str__(self):
         return self.getClientSet()
 
@@ -118,7 +164,7 @@ class Graph:
             data += self.getFeederSet()
             data += self.getClientDemand()
             data += self.getFeederPower()
-            data += self.getNeighbours()
+            data += self.getHopCounts()
             data += self.getMaxDistance()
 
             f = open(filename, 'w')
