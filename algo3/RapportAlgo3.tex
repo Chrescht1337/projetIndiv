@@ -1,0 +1,137 @@
+\documentclass[11pt,a4paper]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{eurosym}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\author{Frantzen Christian}
+\title{Planification de production de bicyclettes}
+\begin{document}
+\maketitle
+\chapter*{Rapport}
+\section*{Introduction}
+\subsection*{Le problème}
+Le but du projet est de déterminer la production mensuelle pour l'année à venir de bicyclettes pour enfants de l'entreprise DeRoo. L'entreprise est capable de produire 30000 unités par mois à 130 euros par unité. Chaque unité additionnelle est produite en faisant travailler ses employés en heures supplémentaires, ce qui augmente les coûts de production à 160 euros par unité.\newline
+L'entreprise a également la possiblité de mettre des bicyclettes dans un stock (à capacité illimitée) à la fin du mois. Les coûts de stockage sont de 20 euros par unité pour chaque unité en stock à la fin du mois. \newline
+On doit déterminer les quantités de bicyclettes à fabriquer et à stocker dans les douze mois à venir respectant la demande prévue tout en minimisant les coûts. Les prévisions de vente pour l'année à venir sont reprises dans le tableau suivant :
+\begin{table}[h]
+\centering
+\caption{Prévisions de vente pour l'année à venir en milliers d'unités}
+\begin{tabular}{ |c |c| c| c| c| c| c| c| c| c| c| c|}
+\hline
+ Jan & Fév & Mars & Avril & Mai & Juin & Juil & Août & Sept & Oct & Nov & Déc\\  
+ \hline
+ 30 & 15 & 15 & 25 & 33 & 40 & 45 & 45 & 26 & 14 & 25 & 30 \\
+ \hline
+\end{tabular}
+\end{table}
+\newline
+On est le premier janvier et il y a 2000 bicyclettes en stock.
+
+\section*{Modélisation}
+Pour notre problème on doit alors minimiser les coûts totaux de l'entreprise $ct$ qui se composent des coûts de production $cp$ et des coûts de stockage $cs$, c'est-à-dire : 
+\begin{equation}\label{eq:1}
+min(ct) = cp + cs
+\end{equation} 
+où on peut réécrire $cp$ pour distinguer entre les coûts de production de bicyclettes produites à prix normal $cpn$ et ceux produites à prix élevé $cpe$. L'équation \eqref{eq:1} devient alors : 
+\begin{equation}\label{eq:2}
+min(ct) = cpn + cpe + cs
+\end{equation}
+Les coûts de productions de bicyclettes produites à prix normal sont donnés par :
+\begin{equation}\label{eq:3}
+cpn = pn\cdot\sum_{ m \in MOIS} bpn_{m}
+\end{equation}
+\begin{equation}\label{eq:4}
+\forall m \in MOIS : 0 \leq bpn_{m} \leq capnorm
+\end{equation}
+Où $pn$ représente le prix normal de production d'une bicyclette en euros, $capnorm$ la capacité de l'entreprise  de production de bicyclettes à prix normal et  $MOIS$ contient l'ensemble des mois de l'année. \newline L'inéquation \eqref{eq:4} précise les bornes de la variable $bpn_{m}$ qui indique le nombre de bicyclettes produites par mois $m$ à prix normal.\newline
+De la même façon, les coûts de productions de bicyclettes produites à prix élevé sont donnés par :
+\begin{equation}\label{eq:5}
+cpe=pe\cdot \sum_{m \in MOIS} bpe_{m}
+\end{equation}
+\begin{equation}\label{eq:6}
+\forall m \in MOIS :  bpe_{m} \geq 0
+\end{equation}
+Où $pe$ est le prix élevé de production de bicyclettes produites après avoir atteinte la capacité de production à prix normal $capnorm$ et $bpe_{m}$ est le nombre de bicyclettes produites à prix élevé, $bpe_{m}$ étant sous la contrainte d'être non négatif.\newline
+Les coûts de stockage sont donnés de la même façon :
+\begin{equation}\label{eq:7}
+cs=ps\cdot \sum_{m \in MOIS} bs_{m}
+\end{equation}
+\begin{equation}\label{eq:8}
+\forall m \in MOIS :  bs_{m} \geq 0
+\end{equation}
+Où $ps$ est  le prix pour chaque bicyclette en stock à la fin du mois et $bs_{m}$ et le nombre de bicyclettes en stock à la fin du mois,  $bs_{m}$ étant sous la contrainte d'être non négatif.
+\subsection*{Contraintes}
+Les inéquations \eqref{eq:4}, \eqref{eq:6} et \eqref{eq:8} énoncent déjà des contraines importantes, or pour satisfaire la demande, on doit introduire une nouvelle contrainte :
+\begin{equation}\label{eq:9}
+\forall m \in MOIS : bpn_{m}+bpe_{m}+bs_{m-1}\geq demande_{m}
+\end{equation}
+L'inéquation \eqref{eq:9} précise que pour chaque mois $m$, le nombre de bicyclettes produites de ce mois $m$ et ceux en stock du mois passé $m-1$ doit être supérieur ou égal à la demande du mois $m$.\newline
+Pour garantir qu'il n'y a pas de bicyclettes produites à prix élevé avant que la capacité de production de bicyclettes à prix normal est atteinte, on a la contrainte : 
+\begin{equation}\label{eq:10}
+\forall m \in MOIS : bpn_{m} \neq capnorm \Rightarrow bpe_{m}=0  
+\end{equation}
+\subsubsection*{Détermination du stock}
+Pour déterminer combien de bicyclettes il y aura en stock à la fin du mois $m$, on doit soustraire la demande du mois $m$ des bicyclettes produites ce mois et du stock du mois précédent :
+\begin{equation}\label{eq:11}
+\forall m \in MOIS : bs_{m}=bpn_{m}+bpe_{m}+bs_{m-1}-demande_{m}
+\end{equation}
+Pour l'équation \eqref{eq:11}, tout comme pour l'équation \eqref{eq:9}, lors du cas de janvier, $bs_{m-1}$ est le nombre de bicyclettes en stock le premier janvier, $stockinitial$.
+\subsection*{Constantes}
+Voici les valeurs des constantes énoncées ci-dessus :
+\begin{table}[h]
+\centering
+\caption{Valeurs des constantes du modèle}
+\begin{tabular}{ |c |c| c| c| c| c|}
+\hline
+ Constante  & $pn$ & $pe$ & $ps$ & $capnorm$ & $stockinitial$ \\  
+ \hline
+ Valeur & 130 & 160 & 20 & 30000 & 2000  \\
+ \hline
+\end{tabular}
+\end{table}
+
+
+\section*{Programmation linéaire}
+\subsection*{Précisions techniques}
+Le problème est modélisé et résolu à l'aide de la résolution d'un modèle de programmation linéaire. Le langage de programmation linéaire utilié est le language \textit{Mosel} et le logiciel utilisé est \textit{FICO XPRESS OPTIMIZATION SUITE}.
+\subsection*{Code}
+Le modèle écrit en \textit{Mosel} se trouve dans le fichier \og \textit{bicyclettesMod.mos}  \fg{} et les valeurs pour initialiser les structures de données se trouvent dans le fichier \og \textit{bicyclettesData.dat} \fg{}.
+\subsubsection*{Difficultés rencontrées}
+Comme déjà indiqué dans la section précédente, pour les (in)équations \eqref{eq:9} et \eqref{eq:11}, lorsque $m$ référence vers le mois de janvier, $bs_{m-1}$ fait référence vers $stockinitial$. Mon choix d'implémentation gère la quantité de bicyclettes en stock à la fin du mois dans un \textit{array} à 12 éléments pour les 12 mois de l'année à venir, $stockinitial$ étant le stock au début de janvier et pas à la fin, est stocké dans une variable à part. Ainsi pour les (in)équations \eqref{eq:9} et \eqref{eq:11}, les cas de $m$ référençant janvier est traité en dehors des boucles qui itèrent sur tous les autres mois.\newline
+La contrainte \eqref{eq:10} n'est pas enforcée formellement dans le code. Or comme $pe$ est plus grand que $pn$, l'optimiseur favorise la production de bicyclettes à prix normal et essaie d'éviter de produire ceux à prix élevé jusqu'à ce que la capacité de production est atteinte.
+\subsection*{Résultats}
+L'exécution du code fournit comme résultats les valeurs suivantes :
+\begin{table}[h]
+\centering
+\caption{Coûts calculés lors de la minimisation. En euros}
+\begin{tabular}{ |c |c|}
+\hline
+ Coûts de production à prix normal & 39130000   \\
+ \hline
+ Coûts de production à prix élevé & 6400000 \\  
+ \hline
+  Coûts de stockage &   60000 \\
+ \hline
+   Coûts totaux & 45590000   \\
+ \hline
+\end{tabular}
+\end{table}
+
+Les coûts totaux minimales s'élèvent donc à 45590000 euros. Ayant en total 343000 de bicyclettes à produire pour l'année à venir, avec 2000 déjà en stock, le prix moyen de production s'élève donc à 133.70 euros, ce qui semble être une valeur raisonnable. L'exécution du code affiche pour chaque mois des informations détaillées.
+
+
+
+
+
+
+
+
+
+
+
+
+\end{document}
