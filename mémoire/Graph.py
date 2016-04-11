@@ -67,25 +67,25 @@ class Graph:
     def createAdjMat(self):
         for i in range(len(self.graph)):
             for j in range(len(self.graph[i])):
-                currentV = self.graph[i][j]
+                currentV = str(self.graph[i][j])
                 self.adjacencyMatrix[currentV] = dict()
                 self.adjacencyMatrix[currentV][currentV] = 0
-                neighbours = currentV.getNeighbours()
+                neighbours = self.graph[i][j].getNeighbours()
                 for v, dist in neighbours.items():
-                    self.adjacencyMatrix[currentV][v] = dist
+                    self.adjacencyMatrix[currentV][str(v)] = dist
 
     def Floyd(self):
         infinity = float("inf")
         for k in range(len(self.graph)):
             for kk in range(len(self.graph[k])):
-                kVertex = self.graph[k][kk]
+                kVertex = str(self.graph[k][kk])
                 for x in range(len(self.graph)):
                     for xx in range(len(self.graph[x])):
-                        xVertex = self.graph[x][xx]
+                        xVertex = str(self.graph[x][xx])
                         if self.adjacencyMatrix[xVertex].get(kVertex, infinity) < infinity:
                             for y in range(len(self.graph)):
                                 for yy in range(len(self.graph[y])):
-                                    yVertex = self.graph[y][yy]
+                                    yVertex = str(self.graph[y][yy])
                                     if self.adjacencyMatrix[kVertex].get(yVertex,
                                                                          infinity) < infinity:
                                         if self.adjacencyMatrix[xVertex][kVertex] + \
@@ -98,13 +98,37 @@ class Graph:
 
     def createLayers(self):
         for j in self.feeders:
-            self.layers[j]=dict()
+            feeder=str(j)
+            self.layers[feeder]=[]
+            for lam in range(self.maxDistance+1):
+                self.layers[feeder].append([])
+
             for i in range(len(self.clients)):
-                for client in self.clients[i]:
-                    self.layers[j][client] =0
+                for k in range(len(self.clients[i])):
+                    client=str(self.clients[i][k])
+                    try:
+                        self.layers[feeder][self.adjacencyMatrix[feeder][client]].append(client)
+                    except IndexError:
+                        pass
+
+
 
     def createR(self):
-        pass
+        for f in self.feeders:
+            j=str(f)
+            self.setR[j]=dict()
+            for lam in range(1,self.maxDistance):
+                for ck in self.layers[j][lam]:
+                    k=str(ck)
+                    self.setR[j][k]=[]
+                    for i in range(len(self.clients)):
+                        for cv in self.clients[i]:
+                            v=str(cv)
+                            if self.adjacencyMatrix[j][v]>lam and self.adjacencyMatrix[v][
+                                k]<=self.maxDistance-lam:
+                                self.setR[j][k].append(v)
+
+
 
     def getClientSet(self):
         clients = 'set CLIENTS := '
@@ -125,13 +149,13 @@ class Graph:
         text = 'param: LINKS: hopcost:=\n'
         for i in range(len(self.graph)):
             for j in range(len(self.graph[i])):
-                v1 = self.graph[i][j]
+                v1 = str(self.graph[i][j])
                 for k in range(len(self.graph)):
                     for m in range(len(self.graph[k])):
-                        v2 = self.graph[k][m]
+                        v2 = str(self.graph[k][m])
                         if v1 != v2:
-                            text+= str(v1) + ' ' + str(v2) + ' ' + str(self.adjacencyMatrix[v1][v2])+ ','
-                            text += '\n'
+                            text+= v1 + ' ' + v2 + ' ' + str(self.adjacencyMatrix[v1][v2])+ ','
+                    text += '\n'
         text = text[:-2] + ';\n'
         return text
 
@@ -182,6 +206,7 @@ class Graph:
 
             f = open(filename, 'w')
             f.write(data)
+            f.write("end;")
             f.close()
         except IOError:
             print("Error writing graph to file")

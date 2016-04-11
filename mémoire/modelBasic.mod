@@ -10,8 +10,8 @@ param hopcost {LINKS}>0;
 param max_distance>0;
 var allocated {FEEDERS,CLIENTS} binary ;
 var Minimum >=0;
-maximize Margin:
-    pow-sum{i in CLIENTS,j in FEEDERS}allocated[j,i]*demand[i];
+maximize Margin{j in FEEDERS}:
+    pow-sum{i in CLIENTS}allocated[j,i]*demand[i];
 subject to one_feeder_per_client {i in CLIENTS}:
     sum{j in FEEDERS}allocated[j,i]=1;
-
+end;

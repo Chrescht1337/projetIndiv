@@ -8,4 +8,6 @@ if __name__ == "__main__":
     g.connectNeighbours()
     g.createAdjMat()
     g.Floyd()
+    g.createLayers()
+    g.createR()
     g.writeToFile(dataFile)
