@@ -2,7 +2,7 @@ from Graph import *
 
 if __name__ == "__main__":
     dataFile = "graph.dat"
-    g = Graph(10, 10)
+    g = Graph(5, 5)
     g.generateClients()
     g.createFeeders()
     g.connectNeighbours()
@@ -10,4 +10,5 @@ if __name__ == "__main__":
     g.Floyd()
     g.createLayers()
     g.createR()
+    g.createP()
     g.writeToFile(dataFile)

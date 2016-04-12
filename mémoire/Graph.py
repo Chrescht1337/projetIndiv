@@ -124,9 +124,23 @@ class Graph:
                     for i in range(len(self.clients)):
                         for cv in self.clients[i]:
                             v=str(cv)
-                            if self.adjacencyMatrix[j][v]>lam and self.adjacencyMatrix[v][
-                                k]<=self.maxDistance-lam:
+                            if self.adjacencyMatrix[j][v]>lam and self.adjacencyMatrix[v][k]<=self.maxDistance-lam:
                                 self.setR[j][k].append(v)
+
+    def createP(self):
+        for f in self.feeders:
+            j=str(f)
+            self.setP[j]=dict()
+            for lam in range(1,self.maxDistance):
+                for ci in self.layers[j][lam+1]:
+                    i=str(ci)
+                    self.setP[j][i]=[]
+                    for ck in self.layers[j][lam]:
+                        k=str(ck)
+                        if i in self.setR[j][k]:
+                            self.setP[j][i].append(k)
+                    if self.setP[j][i]==[]:
+                        self.setP[j].pop(j)
 
 
 
@@ -159,18 +173,27 @@ class Graph:
         text = text[:-2] + ';\n'
         return text
 
+    def getSetPData(self):
+        text=''
+        for j in self.setP:
+            for i in self.setP[j]:
+                text+='set P[{0},{1}]:='.format(j,i)
+                for client in self.setP[j][i]:
+                    text+=' '+client+' '
+                text+=';\n'
+        return text
 
+    def getLayersData(self):
+        text=''
+        for j in self.layers:
+            for lam in range(1,self.maxDistance):
+                if self.layers[j][lam]!=[]:
+                    text+='set L[{0},{1}]:='.format(j,lam)
+                    for i in self.layers[j][lam]:
+                        text+=' '+i+' '
+                    text+=";\n"
+        return text
 
-
-        #
-        # for row in self.graph:
-        #     for v in row:
-        #         neighbours = v.getHopCounts()
-        #         for (n, hops) in neighbours.items():
-        #             text += str(v) + ' ' + str(n) + ' ' + str(hops) + ', '
-        #         text += '\n'
-        # text = text[:-3] + ';\n'
-        # return text
 
     def getClientDemand(self):
         t = 'param demand :=\n'
@@ -203,7 +226,8 @@ class Graph:
             data += self.getFeederPower()
             data += self.getHopCounts()
             data += self.getMaxDistance()
-
+            data += self.getSetPData()
+            data+= self.getLayersData()
             f = open(filename, 'w')
             f.write(data)
             f.write("end;")
