@@ -33,7 +33,8 @@ class Graph:
             self.graph.append(deepcopy(row))
 
     def createFeeders(self):
-        pow = self.graphDemand  # // self.dimI + 1
+        pow = randint(self.graphDemand//(self.dimI//2),self.graphDemand//(self.dimI//2)+10)# // self.dimI + 1
+        #pow = self.graphDemand  # // self.dimI + 1
         for i in range(0, self.dimI, 2):
             j = randint(1, self.dimJ - 1)
             feeder = Feeder(i, j, pow)

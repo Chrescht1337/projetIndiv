@@ -17,7 +17,10 @@ set N {FEEDERS} default {};
 maximize Margin_over_feeders{j in FEEDERS}:
     pow-sum{i in CLIENTS}allocated[j,i]*demand[i];
 subject to minover_feeders{j in FEEDERS}:
-    pow-sum{i in CLIENTS}allocated[j,i]*demand[i]>=Min;
+    pow-sum{i in CLIENTS}allocated[j,i]*demand[i]>=0;
+
+subject to max_distance_constraint{i in CLIENTS,j in FEEDERS}:
+	hopcost[i,j]*allocated[j,i]<=max_distance;
 
 subject to layer_eq{j in FEEDERS,lam in 1..(max_distance-1),i in L[j,lam], s in P[j,i]}:
     allocated[j,i]<=sum{k in P[j,i]}allocated[j,k];
@@ -25,5 +28,7 @@ subject to layer_eq{j in FEEDERS,lam in 1..(max_distance-1),i in L[j,lam], s in 
 subject to one_feeder_per_client {i in CLIENTS}:
     sum{j in FEEDERS}allocated[j,i]=1;
 
+subject to demand_for_power_sufficiency {j in FEEDERS}:
+	power[j]-sum{i in CLIENTS}allocated[j,i]*demand[i]>=0;
 
 end;
