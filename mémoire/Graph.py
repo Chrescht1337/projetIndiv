@@ -145,6 +145,17 @@ class Graph:
         text += ";\n"
         return text
 
+    def getNeighourData(self):
+        text=''
+        for v in self.vertices:
+            text+="set NEIGHBOURS[{0}]:=".format(v)
+            neighbours=self.vertices[v].getNeighbours()
+            for n in neighbours:
+                text+=" {0}".format(n)
+            text+=";\n"
+        return text
+
+
     def getHopCounts(self):
         text = 'param: LINKS: hopcost:=\n'
         for v1 in self.vertices:
@@ -216,7 +227,8 @@ class Graph:
             data += self.getHopCounts()
             data += self.getMaxDistance()
             data += self.getSetPData()
-            data+= self.getLayersData()
+            data += self.getLayersData()
+            data += self.getNeighourData()
             f = open(filename, 'w')
             f.write(data)
             f.write("end;")
