@@ -14,6 +14,10 @@ param hopcost {LINKS}>0;
 var Min>=0;
 var allocated {FEEDERS,CLIENTS} binary ;
 set N {FEEDERS} default {};
+set CC {FEEDERS} default {};
+set O {FEEDERS} default {};
+set CS {FEEDERS} default {};
+set C {FEEDERS,CLIENTS} default {};
 #maximize Min;
 maximize Obj:
 	Min;
@@ -29,5 +33,8 @@ subject to one_feeder_per_client {i in CLIENTS}:
 
 subject to demand_for_power_sufficiency {j in FEEDERS}:
 	power[j]-sum{i in CLIENTS}allocated[j,i]*demand[i]>=0;
+	
+subject to eq24{j in FEEDERS}:
+	sum{i in O[j]}allocated[j,i]<=card(O[j])*sum{k in CS[j]}allocated[j,k];
 
 end;

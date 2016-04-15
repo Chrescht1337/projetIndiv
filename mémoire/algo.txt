@@ -1,5 +1,46 @@
 model modelBasic.mod;
 data graph.dat
+drop eq24;
 solve;
 
+#================
+#Building sets for connectivity cuts
+#================
+for {j in FEEDERS, i in CLIENTS}{
+	if allocated[j,i] then{
+		let N[j]:=N[j] union {i};
+	}
+}
+set tmpO  default {};
+for {j in FEEDERS}{
+	for {n in NEIGHBOURS[j]}{
+		if n in N[j] then{
+			let CC[j] := CC[j] union {n};			
+		}
+	}
+	for {v in CC[j]}{
+		for {n in NEIGHBOURS[v]}{
+			if n in N[j] then{
+				if n not in CC[j] then{
+					let CC[j]:=CC[j] union {n};
+				}
+			}
+			else{
+				let CS[j]:=CS[j] union {n};
+			}
+		}
+	}
+	let O[j] := N[j] diff CC[j];
+
+	let tmpO :=tmpO union O[j];
+	for {v in tmpO}{
+		let C[j,v] := C[j,v] union {v};
+		for {n in NEIGHBOURS[v]}{
+			if n in tmpO then {
+				let C[j,v]:=C[j,v] union {n};
+				let tmpO := tmpO diff {n};
+			}
+		}
+	}
+}
 
