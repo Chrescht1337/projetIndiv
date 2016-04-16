@@ -18,6 +18,8 @@ set CC {FEEDERS} default {};
 set O {FEEDERS} default {};
 set CS {FEEDERS} default {};
 set C {FEEDERS,CLIENTS} default {};
+set C_FIRST_CLIENTS {FEEDERS} default {};
+set C_MIN_DISTANCE_CLIENT {FEEDERS,CLIENTS} default {};
 #maximize Min;
 maximize Obj:
 	Min;

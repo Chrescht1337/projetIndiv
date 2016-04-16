@@ -11,7 +11,7 @@ for {j in FEEDERS, i in CLIENTS}{
 		let N[j]:=N[j] union {i};
 	}
 }
-set tmpO  default {};
+set TREATED  default {};
 for {j in FEEDERS}{
 	for {n in NEIGHBOURS[j]}{
 		if n in N[j] then{
@@ -25,22 +25,45 @@ for {j in FEEDERS}{
 					let CC[j]:=CC[j] union {n};
 				}
 			}
-			else{
+			else if n in CLIENTS then{
 				let CS[j]:=CS[j] union {n};
 			}
 		}
 	}
 	let O[j] := N[j] diff CC[j];
-
-	let tmpO :=tmpO union O[j];
-	for {v in tmpO}{
-		let C[j,v] := C[j,v] union {v};
-		for {n in NEIGHBOURS[v]}{
-			if n in tmpO then {
-				let C[j,v]:=C[j,v] union {n};
-				let tmpO := tmpO diff {n};
-			}
+	let C_FIRST_CLIENTS[j] := {};
+	let TREATED := {};
+	for {v in O[j]}{
+		if v not in TREATED then {
+			let C_FIRST_CLIENTS[j]:=C_FIRST_CLIENTS[j] union {v};
+			let C[j,v] := C[j,v] union {v};
+			for {k in C[j,v]}{
+				for {n in NEIGHBOURS[k]}{
+					if n in O[j] and n not in C[j,v]then {
+						let C[j,v]:=C[j,v] union {n};
+						let TREATED := TREATED union {n};
+					}
+				}
+			}	
 		}
 	}
+	#preparing CS for eq25
+	for {v in C_FIRST_CLIENTS[j] }{
+		let C_MIN_DISTANCE_CLIENT[j,v] := C_MIN_DISTANCE_CLIENT[j,v] union {v};
+	}
+	display C_MIN_DISTANCE_CLIENT;
+	#choosing closest client to feeder for every connected component in O[j]
+	for {v in C_FIRST_CLIENTS[j],c in C[j,v]}{
+		if hopcost[j,c] < hopcost[ j , C_MIN_DISTANCE_CLIENT[j,v] ] then {
+			let C_MIN_DISTANCE_CLIENT[j,v] := C_MIN_DISTANCE_CLIENT[j,v] diff C_MIN_DISTANCE_CLIENT[j,v];
+			let C_MIN_DISTANCE_CLIENT[j,v]:= C_MIN_DISTANCE_CLIENT[j,v] union {c};
+		}
+	}
+	for {v in C_FIRST_CLIENTS[j], i_cc in C_MIN_DISTANCE_CLIENT[j,v], k in CS[j]}{
+		if hopcost[j,k]+ hopcost[i_cc,k]> max_distance then
+			let CS[j] := CS[j] diff {k};
+	}
+	
+	
 }
 
