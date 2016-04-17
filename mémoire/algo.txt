@@ -51,17 +51,19 @@ for {j in FEEDERS}{
 	for {v in C_FIRST_CLIENTS[j] }{
 		let C_MIN_DISTANCE_CLIENT[j,v] := C_MIN_DISTANCE_CLIENT[j,v] union {v};
 	}
-	display C_MIN_DISTANCE_CLIENT;
+	#display C_MIN_DISTANCE_CLIENT;
 	#choosing closest client to feeder for every connected component in O[j]
-	for {v in C_FIRST_CLIENTS[j],c in C[j,v]}{
-		if hopcost[j,c] < hopcost[ j , C_MIN_DISTANCE_CLIENT[j,v] ] then {
+	for {v in C_FIRST_CLIENTS[j],c in C[j,v],i_cc in C_MIN_DISTANCE_CLIENT[j,v] }{
+		display i_cc;
+		display c;
+		if hopcost[j,c] < hopcost[ j , i_cc ] then {
 			let C_MIN_DISTANCE_CLIENT[j,v] := C_MIN_DISTANCE_CLIENT[j,v] diff C_MIN_DISTANCE_CLIENT[j,v];
 			let C_MIN_DISTANCE_CLIENT[j,v]:= C_MIN_DISTANCE_CLIENT[j,v] union {c};
 		}
 	}
 	for {v in C_FIRST_CLIENTS[j], i_cc in C_MIN_DISTANCE_CLIENT[j,v], k in CS[j]}{
-		if hopcost[j,k]+ hopcost[i_cc,k]> max_distance then
-			let CS[j] := CS[j] diff {k};
+		if (hopcost[j,k]+ hopcost[i_cc,k])<= max_distance then
+			let CS_RELEVANT_FOR_CC[j,v] := CS_RELEVANT_FOR_CC[j,v] union {k};
 	}
 	
 	
