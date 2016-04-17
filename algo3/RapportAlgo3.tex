@@ -8,7 +8,8 @@
 \usepackage{graphicx}
 \usepackage{amssymb}
 \author{Frantzen Christian}
-\title{Planification de production de bicyclettes}
+\title{Planification de production de bicyclettes\\
+		INFO-F-310}
 \begin{document}
 \maketitle
 \chapter*{Rapport}
@@ -69,13 +70,13 @@ Les inéquations \eqref{eq:4}, \eqref{eq:6} et \eqref{eq:8} énoncent déjà des
 \begin{equation}\label{eq:9}
 \forall m \in MOIS : bpn_{m}+bpe_{m}+bs_{m-1}\geq demande_{m}
 \end{equation}
-L'inéquation \eqref{eq:9} précise que pour chaque mois $m$, le nombre de bicyclettes produites de ce mois $m$ et ceux en stock du mois passé $m-1$ doit être supérieur ou égal à la demande du mois $m$.\newline
+L'inéquation \eqref{eq:9} précise que pour chaque mois $m$, la somme du nombre de bicyclettes produites pendant le mois $m$ et celui de ceux encore en stock du mois précédent $m-1$ doit être supérieur ou égal à la demande du mois $m$.\newline
 Pour garantir qu'il n'y a pas de bicyclettes produites à prix élevé avant que la capacité de production de bicyclettes à prix normal est atteinte, on a la contrainte : 
 \begin{equation}\label{eq:10}
-\forall m \in MOIS : bpn_{m} \neq capnorm \Rightarrow bpe_{m}=0  
+\forall m \in MOIS : bpn_{m} < capnorm \Rightarrow bpe_{m}=0  
 \end{equation}
 \subsubsection*{Détermination du stock}
-Pour déterminer combien de bicyclettes il y aura en stock à la fin du mois $m$, on doit soustraire la demande du mois $m$ des bicyclettes produites ce mois et du stock du mois précédent :
+Pour déterminer combien de bicyclettes il y aura en stock à la fin du mois $m$, on doit soustraire la demande du mois $m$ au nombre bicyclettes produites lors de ce mois et du stock du mois précédent :
 \begin{equation}\label{eq:11}
 \forall m \in MOIS : bs_{m}=bpn_{m}+bpe_{m}+bs_{m-1}-demande_{m}
 \end{equation}
@@ -102,7 +103,7 @@ Le problème est modélisé et résolu à l'aide de la résolution d'un modèle 
 Le modèle écrit en \textit{Mosel} se trouve dans le fichier \og \textit{bicyclettesMod.mos}  \fg{} et les valeurs pour initialiser les structures de données se trouvent dans le fichier \og \textit{bicyclettesData.dat} \fg{}.
 \subsubsection*{Difficultés rencontrées}
 Comme déjà indiqué dans la section précédente, pour les (in)équations \eqref{eq:9} et \eqref{eq:11}, lorsque $m$ référence vers le mois de janvier, $bs_{m-1}$ fait référence vers $stockinitial$. Mon choix d'implémentation gère la quantité de bicyclettes en stock à la fin du mois dans un \textit{array} à 12 éléments pour les 12 mois de l'année à venir, $stockinitial$ étant le stock au début de janvier et pas à la fin, est stocké dans une variable à part. Ainsi pour les (in)équations \eqref{eq:9} et \eqref{eq:11}, les cas de $m$ référençant janvier est traité en dehors des boucles qui itèrent sur tous les autres mois.\newline
-La contrainte \eqref{eq:10} n'est pas enforcée formellement dans le code. Or comme $pe$ est plus grand que $pn$, l'optimiseur favorise la production de bicyclettes à prix normal et essaie d'éviter de produire ceux à prix élevé jusqu'à ce que la capacité de production est atteinte.
+La contrainte \eqref{eq:10} n'est pas enforcée explicitement dans le code. Or comme $pe$ est plus grand que $pn$, le solveur favorise la production de bicyclettes à prix normal et essaie d'éviter de produire ceux à prix élevé jusqu'à ce que la capacité de production est atteinte.
 \subsection*{Résultats}
 L'exécution du code fournit comme résultats les valeurs suivantes :
 \begin{table}[h]
