@@ -10,7 +10,7 @@ param power {FEEDERS}>0;
 param pow := sum{j in FEEDERS} power[j];
 check:
 sum {i in CLIENTS} demand[i]<= pow;
-param hopcost {LINKS}>0;
+param hopcost {LINKS}>=0;
 var Min>=0;
 var allocated {FEEDERS,CLIENTS} binary ;
 set N {FEEDERS} default {};		#set of clients allocated to feeder j
@@ -21,7 +21,11 @@ set C {FEEDERS,CLIENTS} default {};		#set of connected components in O
 set C_FIRST_CLIENTS {FEEDERS} default {};	#clients needed to identify the different sets of connected components in C
 set C_MIN_DISTANCE_CLIENT {FEEDERS,CLIENTS} default {};		#clients closest to their feeder of the connected components in C
 set CS_RELEVANT_FOR_CC{FEEDERS,CLIENTS} default {};
-
+set F {FEEDERS} default {};
+set FEASIBLE default {};
+set TREATED  default {};
+set DIST_TO_FEEDER {FEEDERS,CLIENTS} default {};
+set CS_RELEVANT_FOR_CLIENT_IN_F{FEEDERS,CLIENTS};
 maximize Obj:
 	Min;
     #pow-sum{i in CLIENTS}allocated[j,i]*demand[i];
@@ -42,5 +46,8 @@ subject to eq24{j in FEEDERS}:
 	
 subject to eq25{j in FEEDERS,v in C_FIRST_CLIENTS[j], i_cc in C_MIN_DISTANCE_CLIENT[j,v]}:
 	allocated[j,i_cc]<=sum{k in CS_RELEVANT_FOR_CC[j,v]}allocated[j,k];
+
+subject to eq26{j in FEEDERS,i in F[j]}:
+	allocated[j,i]<=sum{k in CS_RELEVANT_FOR_CLIENT_IN_F[j,i]}allocated[j,k];
 
 end;

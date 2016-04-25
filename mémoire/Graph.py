@@ -19,7 +19,7 @@ class Graph:
         self.minClientDemand = 3
         self.maxClientDemand = 7
         self.graphDemand = 0
-        self.maxDistance = dimI
+        self.maxDistance = dimI*2
 
     def generateClients(self):
         for i in range(self.dimI):
@@ -33,7 +33,8 @@ class Graph:
             self.graph.append(deepcopy(row))
 
     def createFeeders(self):
-        pow = randint(self.graphDemand//(self.dimI//2),self.graphDemand//(self.dimI//2)+10)# // self.dimI + 1
+        pow = self.graphDemand#randint(self.graphDemand//(self.dimI//2),self.graphDemand//(self.dimI//2)+10)#
+        #  // self.dimI + 1
         #pow = self.graphDemand  # // self.dimI + 1
         for i in range(0, self.dimI, 2):
             j = randint(1, self.dimJ - 1)
@@ -160,8 +161,8 @@ class Graph:
         text = 'param: LINKS: hopcost:=\n'
         for v1 in self.vertices:
             for v2 in self.vertices:
-                if v1 != v2:
-                    text+= v1 + ' ' + v2 + ' ' + str(self.adjacencyMatrix[v1][v2])+ ','
+#                if v1 != v2:
+                text+= v1 + ' ' + v2 + ' ' + str(self.adjacencyMatrix[v1][v2])+ ','
             text+='\n'
         text = text[:-2] + ';\n'
         return text
@@ -187,11 +188,11 @@ class Graph:
         text=''
         for j in self.layers:
             for lam in range(1,self.maxDistance):
-                if self.layers[j][lam]!=[]:
-                    text+='set L[{0},{1}]:='.format(j,lam)
-                    for i in self.layers[j][lam]:
-                        text+=' '+i+' '
-                    text+=";\n"
+                #if self.layers[j][lam]!=[]:
+                text+='set L[{0},{1}]:='.format(j,lam)
+                for i in self.layers[j][lam]:
+                    text+=' '+i+' '
+                text+=";\n"
         return text
 
 
