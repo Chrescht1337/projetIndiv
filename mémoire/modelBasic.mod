@@ -11,7 +11,7 @@ param pow := sum{j in FEEDERS} power[j];
 check:
 sum {i in CLIENTS} demand[i]<= pow;
 param hopcost {LINKS}>=0;
-var Min>=0;
+#var Min>=0;
 var allocated {FEEDERS,CLIENTS} binary ;
 set N {FEEDERS} default {};		#set of clients allocated to feeder j
 set CC {FEEDERS} default {};	#set of clients in N[j] forming a connected component with j
@@ -25,14 +25,15 @@ set F {FEEDERS} default {};
 set FEASIBLE default {};
 set TREATED  default {};
 set DIST_TO_FEEDER {FEEDERS,CLIENTS} default {};
-set CS_RELEVANT_FOR_CLIENT_IN_F{FEEDERS,CLIENTS};
-maximize Obj:
-	Min;
-    #pow-sum{i in CLIENTS}allocated[j,i]*demand[i];
-subject to Margin_over_feeders{j in FEEDERS}:
-    pow-sum{i in CLIENTS}allocated[j,i]*demand[i]>=Min;
+set CS_RELEVANT_FOR_CLIENT_IN_F{FEEDERS,CLIENTS} default {};
+maximize Obj{j in FEEDERS}:
+	pow-sum{i in CLIENTS}allocated[j,i]*demand[i];
+	#Min;
+    
+#subject to Margin_over_feeders{j in FEEDERS}:
+#    pow-sum{i in CLIENTS}allocated[j,i]*demand[i]>=Min;
 
-subject to layer_eq{j in FEEDERS,lam in 1..(max_distance-1),i in L[j,lam], s in P[j,i]}:
+subject to layer_eq{j in FEEDERS,lam in 1..(max_distance-1),i in L[j,lam+1]}:#, s in P[j,i]}:
     allocated[j,i]<=sum{k in P[j,i]}allocated[j,k];
 
 subject to one_feeder_per_client {i in CLIENTS}:

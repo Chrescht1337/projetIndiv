@@ -187,7 +187,7 @@ class Graph:
     def getLayersData(self):
         text=''
         for j in self.layers:
-            for lam in range(1,self.maxDistance):
+            for lam in range(1,self.maxDistance+1):
                 #if self.layers[j][lam]!=[]:
                 text+='set L[{0},{1}]:='.format(j,lam)
                 for i in self.layers[j][lam]:
