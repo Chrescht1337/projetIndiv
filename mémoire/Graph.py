@@ -16,10 +16,10 @@ class Graph:
         self.layers= dict()
         self.setR= dict()
         self.setP= dict()
-        self.minClientDemand = 3
-        self.maxClientDemand = 7
+        self.minClientDemand = 1
+        self.maxClientDemand = 100
         self.graphDemand = 0
-        self.maxDistance = dimI*2
+        self.maxDistance = dimI*dimJ//(dimI +1)
 
     def generateClients(self):
         for i in range(self.dimI):
