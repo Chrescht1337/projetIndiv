@@ -1,0 +1,100 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{makeidx}
+\usepackage{multicol}
+\usepackage{lipsum}
+\usepackage[left=3cm,top=2cm,right=3cm]{geometry}
+\begin{document}
+\begin{titlepage}
+\begin{center}
+\textbf{\textsc{UNIVERSIT\'E LIBRE DE BRUXELLES}}\\
+\textbf{\textsc{Faculté des Sciences}}\\
+\textbf{\textsc{Département d'Informatique}}
+\vfill{}\vfill{}
+\begin{center}{\Huge Implémentation d'une formulation étendue pour la conception d'un réseau de distribution d'électricité}\end{center}{\Huge \par}
+\begin{center}{\large Frantzen Christian}\end{center}{\Huge \par}
+\vfill{}\vfill{}
+\begin{flushleft}{\large \textbf{Superviseur : Bernard Fortz}}\hfill{}\end{flushleft}{\large\par}
+\vfill{}\vfill{}\enlargethispage{3cm}
+\textbf{Année académique 2015~-~2016}
+\end{center}
+\end{titlepage}
+\tableofcontents
+\pagebreak
+\begin{abstract}
+\lipsum[1]
+\end{abstract}
+\begin{multicols}{2}
+\section{Introduction}
+La transition énergétique pose beaucoup de nouveaux défis pour l'industrie. Souvent de grandes centrales de production d'électricité sont remplacées par plusieurs centrales plus petites. Ceci nécessite un changement important dans la configuration du réseau. La configuration d'un réseau de distribution d'électricité a un impact important sur des paramètres physiques comme perte d'énergie de de tensionainsi que la charge des points-clés d'un réseau comme les transformateurs. Pour prendre en compte tous ces facteurs mais en gardant un niveau d'abstraction élevé, Rossi et al \cite{Rossi} introduisent un paramètre de distance maximale $D_{max}$. On considère qu'un client alloué à un fournisseur à une distance inférieure à $D_{max}$ n'est pas soumis à des phénomènes de perte d'énergie ou de tension trop importants.\newline\newline
+Le but des algorithmes présentés dans leur article est de maximiser la marge minimale des différentes sources du réseau. La marge d'une source est la différence entre sa capacité de production d'énergie et la demande totale des clients connectés à cette source.\newline
+Avoir une grande marge une caractéristique de robustesse d'un réseau face à des augmentations spontanée de la demande.
+\section{Approche}
+\subsection{Définition du problème}
+Pour résoudre le problème, on représente le réseau par un graphe non-dirigé $G(V,E)$, où $V$ est l'ensemble des sommets et $E$ est l'ensembles des arrêtes. L'ensemble des sommets $V$ est l'union des ensembles disjoints des clients  $V_{c}$ et des fournisseurs $V_{f}$. L'ensemble $E$ représente les différents connexions avec interrupteur entre les sommets. $n_{f}=|V_{f}| $ est le nombre de fournisseurs dans le réseau et $n_{c}=|V_{c}| $ est le nombre de clients. Chaque sommet $j$ dans $V_{f}$ a un poids $pow_{j}$ qui représente sa capacité maximale de production d'énergie. Chaque sommet $i$ dans $V_{c}$ a un poids $dem_{i}$ qui représente a demande d'énergie.La distance minimale entre 2 sommets $i$ et $j$ dans $G$ est donnée par $d_{i,j}$ est représente un nombre de sauts. Comme $G$ est non-dirigé, $d_{i,j}=d_{j,i} \forall (i,j) \in V \times V$. L'ensemble des clients pour lesquelles la distance minimale entre eux et le fournisseur $j$ est inférieure à $D_{max}$ est noté $N_{j} \forall j \in V_{f}$. $N_{j}$ est l'ensemble des clients qui peuvent potentiellement être connectés au fournisseur $j$. S'il existe un client qui ne se retrouve dans aucun ensemble $N_{j}$, la résolution est infaisable.
+\subsection{Contraintes}
+Une configuration est faisable si elle respecte les contraintes suivantes :
+\begin{enumerate}
+\item Contrainte de demande : La capacité d'un fournisseur doit être suffisante pour satisfaire la demande des clients auxquels il est connecté.
+\item Contrainte de connectivité : pour des raisons techniques, deux fournisseurs ne doivent pas être connectés entre eux, ce que implique que chaque client doit être connecté à exactement un fournisseur. Chaque sous-graph de $G$ doit être non-cyclique.
+\item Contrainte de distance : Pour minimiser les phénomènes de perte d'énergie et de tension, les clients ne doivent pas être alloués à des fournisseurs à une distance supérieure à $D_{max}$.   
+\end{enumerate}
+\subsection{Conditions de faisabilité}
+Pour que la résolution du problème soit faisable, il existe 2 conditions nécessaire pour garantir la faisabilité :
+\begin{itemize}
+\item La somme des capacités des fournisseurs doit satisfaire la demande totale des clients : \begin{equation*}
+\sum_{j \in V_{f}}{pow_{j}}  = \sum_{i \in V_{c}}{dem_{i}}
+\end{equation*}
+\item Pour chaque client il existe un ou plusieurs fournisseurs à une distance inférieure ou égale à $D_{max}$ :
+\begin{equation*}
+\forall i \in V_{c} :  \exists j \in V_{f} \mid dist(j,i) \leq D_{max}
+\end{equation*}
+\end{itemize}
+Si c'est deux conditions ne sont pas satisfaite, on peut démontrer que la résolution du problème est infaisable.\\
+Pour rendre la résolution plus facile, dans notre configuration, on attribue à chaque fournisseur la capacité de satisfaire tous les clients : 
+\begin{equation*}
+\forall j \in V_{f} : pow_{j}=\sum_{i \in V_{c}}{dem_{i}}.
+\end{equation*}
+\section{Méthode implémentée}
+Dans l'article, il y a 2 types de formulations utilisées pour le problème. Une qui ne prend en compte que les sommets du graphe et ne décide que si un client $i$ est alloué ou pas à un fournisseur $j$ et l'autre formulation ne prend en compte que l'état des différentes arrêtes du graphe et décide s'il y a un flux de courant électrique qui la traverse ou pas.\newline\newline
+Dans ce travail, on se concentre sur la formulation avec les sommets, ainsi, on a les variables de décision suivantes : $\forall (i,j) \in V_{c}\times V_{f}$, $ x_{i,j}$ est mise à 1 si et seulement si le client $i$ est alloué au fournisseur $j$, sinon $x_{i,j}=0$. Les contraintes de la formulation sont décrites ici :
+\begin{equation}\label{eq:Obj}
+Maximiser \ M_{min}
+\end{equation}
+\begin{equation}
+pow -\sum_{i \in N{j}}{x_{i,j}dem_{i}} \geq M_{min} \ \forall j \in V_{f}
+\end{equation}
+\begin{equation}
+x_{i,j}=0 \ \ \forall j \in V_{f},\forall i \notin N_{j}
+\end{equation}
+\begin{equation}
+a
+\end{equation}
+\begin{equation}
+a
+\end{equation}
+\begin{equation}
+a
+\end{equation}
+\begin{equation}
+a
+\end{equation}
+\section{Résultats expérimentaux}
+das
+\section{Discussion}
+sad
+\section{Conclusion et perspectives}
+sda
+\bibliographystyle{apalike}
+
+\begin{thebibliography}{20}
+\bibitem{Rossi}
+André Rossi, Alexis Aubry, Mireille Jacomino, Connectivity-and-hop-constrained design of electricity distribution networks,  \textit{European Journal of Operational Research}, 218 2012, 48-57
+\end{thebibliography}
+\end{multicols}
+\end{document}

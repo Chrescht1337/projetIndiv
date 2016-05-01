@@ -16,6 +16,7 @@ class Graph:
         self.layers= dict()
         self.setR= dict()
         self.setP= dict()
+        self.setN=dict()
         self.minClientDemand = 1
         self.maxClientDemand = 100
         self.graphDemand = 0
@@ -131,6 +132,22 @@ class Graph:
                         if i in self.setR[j][k]:
                             self.setP[j][i].append(k)
 
+    def createN(self):
+        for j in self.feeders:
+            self.setN[j]=[]
+            for d in range(1,self.maxDistance+1):
+                self.setN[j].extend(self.layers[j][d])
+
+    def checkDistanceFeasibility(self):
+        for i in self.clients:
+            count=0
+            for j in self.feeders:
+                if i in self.setP[j]:
+                    count+=1
+            if count == 0 :
+                print("failed")
+                return False
+        return True
 
     def getClientSet(self):
         text = 'set CLIENTS := '
@@ -211,12 +228,37 @@ class Graph:
         text += ';\n'
         return text
 
+    def getNData(self):
+        text= ''
+        for j in self.feeders:
+            text+='set N[{0}] :='.format(j)
+            for c in self.setN[j]:
+                text+=' {0} '.format(c)
+            text+=";\n"
+        return text
+
     def getMaxDistance(self):
         text = 'param max_distance :=' + str(self.maxDistance) + ';\n'
         return text
 
     def __str__(self):
         return self.getClientSet()
+
+    def setUp(self,dataFile):
+        self.generateClients()
+        self.createFeeders()
+        self.connectNeighbours()
+        self.createAdjMat()
+        self.Floyd()
+        self.createLayers()
+        self.createR()
+        self.createP()
+        self.createN()
+        if self.checkDistanceFeasibility():
+            print("success")
+            self.writeToFile(dataFile)
+        #else:
+        #    self.setUp(dataFile)
 
     def writeToFile(self, filename):
         try:
@@ -230,6 +272,7 @@ class Graph:
             data += self.getSetPData()
             data += self.getLayersData()
             data += self.getNeighourData()
+            data += self.getNData()
             f = open(filename, 'w')
             f.write(data)
             f.write("end;")
