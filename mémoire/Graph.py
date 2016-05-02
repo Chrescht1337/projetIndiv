@@ -20,7 +20,7 @@ class Graph:
         self.minClientDemand = 1
         self.maxClientDemand = 100
         self.graphDemand = 0
-        self.maxDistance = dimI*dimJ//(dimI +1)
+        self.maxDistance = dimI*dimJ//(dimI )+1
 
     def generateClients(self):
         for i in range(self.dimI):
