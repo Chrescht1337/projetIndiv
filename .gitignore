@@ -1,3 +1,7 @@
 .ide*
 __py*
 graph.dat
+*.aux
+*.log
+*.toc
+*.synctex.gz

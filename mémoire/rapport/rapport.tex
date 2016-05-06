@@ -31,8 +31,8 @@
 \end{abstract}
 \begin{multicols}{2}
 \section{Introduction}
-La transition énergétique pose beaucoup de nouveaux défis pour l'industrie. Souvent de grandes centrales de production d'électricité sont remplacées par plusieurs centrales plus petites. Ceci nécessite un changement important dans la configuration du réseau. La configuration d'un réseau de distribution d'électricité a un impact important sur des paramètres physiques comme perte d'énergie de de tensionainsi que la charge des points-clés d'un réseau comme les transformateurs. Pour prendre en compte tous ces facteurs mais en gardant un niveau d'abstraction élevé, Rossi et al \cite{Rossi} introduisent un paramètre de distance maximale $D_{max}$. On considère qu'un client alloué à un fournisseur à une distance inférieure à $D_{max}$ n'est pas soumis à des phénomènes de perte d'énergie ou de tension trop importants.\newline\newline
-Le but des algorithmes présentés dans leur article est de maximiser la marge minimale des différentes sources du réseau. La marge d'une source est la différence entre sa capacité de production d'énergie et la demande totale des clients connectés à cette source.\newline
+La transition énergétique pose beaucoup de nouveaux défis pour l'industrie. Souvent de grandes centrales de production d'électricité sont remplacées par plusieurs centrales plus petites. Ceci nécessite un changement important dans la configuration du réseau. La configuration d'un réseau de distribution d'électricité a un impact important sur des paramètres physiques comme perte d'énergie de de tensionainsi que la charge des points-clés d'un réseau comme les transformateurs. Pour prendre en compte tous ces facteurs mais en gardant un niveau d'abstraction élevé, Rossi et al \cite{Rossi} introduisent un paramètre de distance maximale $D_{max}$. On considère qu'un client alloué à un fournisseur à une distance inférieure à $D_{max}$ n'est pas soumis à des phénomènes de perte d'énergie ou de tension trop importants.\newline \indent
+Le but des algorithmes présentés dans leur article est de maximiser la marge minimale des différentes sources du réseau. La marge d'une source est la différence entre sa capacité de production d'énergie et la demande totale des clients connectés à cette source.\newline \indent
 Avoir une grande marge une caractéristique de robustesse d'un réseau face à des augmentations spontanée de la demande.
 \section{Approche}
 \subsection{Définition du problème}
@@ -61,29 +61,55 @@ Pour rendre la résolution plus facile, dans notre configuration, on attribue à
 \forall j \in V_{f} : pow_{j}=\sum_{i \in V_{c}}{dem_{i}}.
 \end{equation*}
 \section{Méthode implémentée}
-Dans l'article, il y a 2 types de formulations utilisées pour le problème. Une qui ne prend en compte que les sommets du graphe et ne décide que si un client $i$ est alloué ou pas à un fournisseur $j$ et l'autre formulation ne prend en compte que l'état des différentes arrêtes du graphe et décide s'il y a un flux de courant électrique qui la traverse ou pas.\newline\newline
+Dans l'article, il y a 2 types de formulations utilisées pour le problème. Une qui ne prend en compte que les sommets du graphe et ne décide que si un client $i$ est alloué ou pas à un fournisseur $j$ et l'autre formulation ne prend en compte que l'état des différentes arrêtes du graphe et décide s'il y a un flux de courant électrique qui la traverse ou pas.\newline\indent
 Dans ce travail, on se concentre sur la formulation avec les sommets, ainsi, on a les variables de décision suivantes : $\forall (i,j) \in V_{c}\times V_{f}$, $ x_{i,j}$ est mise à 1 si et seulement si le client $i$ est alloué au fournisseur $j$, sinon $x_{i,j}=0$. Les contraintes de la formulation sont décrites ici :
 \begin{equation}\label{eq:Obj}
 Maximiser \ M_{min}
 \end{equation}
-\begin{equation}
+\begin{equation}\label{eq:powDem}
 pow -\sum_{i \in N{j}}{x_{i,j}dem_{i}} \geq M_{min} \ \forall j \in V_{f}
 \end{equation}
-\begin{equation}
+\begin{equation}\label{eq:oneFeeder}
+\sum_{i \in V_{c}}{x_{i,j}}=1 \ \forall j \in V_{f}
+\end{equation}
+\begin{equation}\label{eq:N_j}
 x_{i,j}=0 \ \ \forall j \in V_{f},\forall i \notin N_{j}
 \end{equation}
-\begin{equation}
-a
+\begin{equation}\label{eq:connect}
+$$Les clients alloués au fournisseurs j forment un component connecté $$\forall j \in V_{f}
 \end{equation}
-\begin{equation}
-a
+\begin{equation}\label{eq:dist}
+$$La distance d'un client i à son fournisseur est inférieure ou égale à $$D_{max} \forall i \in V_{c}
 \end{equation}
-\begin{equation}
-a
+\begin{equation}\label{eq:0_1}
+x_{i,j} \in \{0,1 \} \ \forall (i,j) \in V_{c}\times V_{f}
 \end{equation}
-\begin{equation}
-a
+\begin{equation}\label{eq:Mmin_0}
+M_{min}\geq 0
 \end{equation}
+\eqref{eq:Obj} est la fonction objectif: maximiser la marge minimale pour tous les fournisseurs. \eqref{eq:powDem} définit la marge minimale pour tous les fournisseurs. La contrainte \eqref{eq:oneFeeder} assure que chaque client soit alloué à 1 fournisseur et \eqref{eq:N_j} assure qu'un client ne soit pas alloué à un fournisseur situé à une distance supérieure à $D_{max}$. Les contraintes \eqref{eq:connect} et \eqref{eq:dist} sont difficile à enforcer, ils seront expliquer en détail dans la section à suivre. La contrainte \eqref{eq:0_1} assure l'intégralité de solution et \eqref{eq:Mmin_0} la non-négativité.\newline \indent
+Le modèle de programmation linéaire principale se compose des contraintes \eqref{eq:Obj}-\eqref{eq:N_j}, \eqref{eq:0_1} ,\eqref{eq:Mmin_0} ainsi que des \textit{layer inequalities} (inégalités des couches), qui seront expliqués plus tard. Les \textit{layer inequalities} n'aident pas seulement à atteindre la solution optimale, mais aussi à converger plus rapidement.
+\subsection{Layer inequalities}
+Les layer inequalities restreignent le problème principal pour qu'il n'assume pas de solutions qui ne seront jamais bonnes. Les layer inequalities fonctionnen comme suit : les clients se trouvant à une distance $\lambda$ au fournisseur $j$ dans le graphe appartiennent à la couche $L_{j,\lambda}$. Ainsi $\forall j \in V_{f}$ et $\forall \lambda \in \{1,...,D_{max} \}$, tout client $i \in L_{j,\lambda + 1}$ peut être alloué au fournisseur $j$ si et seulement si il y a au moins un client $k \in L_{j,\lambda}$ qui lui aussi est alloué au fournisseur $j$. Cette contrainte peut s'écrire : 
+\begin{align*}
+x_{i,j} \leq \sum_{k \in L_{j,\lambda} }{x_{k,j}} \forall i \in L_{j,\lambda +1},\\ \forall \lambda \in \{ 1,...,D_{max}-1 \}, \forall j \in V_{f}
+\end{align*}
+Ces inégalités enforcent des conditions nécessaires pour la connectivité des la solution ainsi que partiellement prenant en compte les exigences de distance. Elles peuvent être rendues plus stricte en ajoutant la condition que pour tout client $i$ dans $L_{j,\lambda +1}$, seul des clients $k$ dans $L_{j,\lambda}$ qui se trouvent à une distance plus petite ou égale à $D_{max}-\lambda$ de $i$ avec tous les clients alloués sur le chemin entre $i$ et $k$ se trouvant à une distance strictement plus grande que $\lambda$ de $j$ peuvent assurer la connectivité de la solution.S'il n'y a pas de chemin entre $k$ et $i$ d'une longueur inférieur ou égale à $D_{max}-\lambda$, alors le client n'est pas aidant pour connecter $i$ à $j$. De plus, si sur les chemins entre $k$ et $i$ se trouvent un client $v \neq i$ pour lequel la distance à $j$ est plus petite ou égale à $\lambda$, alors le client $i$ peut être connecté à j à travers $v$ et on n'a pas besoin du client $k$.\newline \indent
+Pour construire les layer inequalities, on a besoin de deux ensembles, $R_{k,j}$ et $P_{i,j}$. Soit k un client dans $L_{j,\lambda}$. L'ensemble des clients pour lesquels la distance jusqu'à $j$ est strictement plus grande que $\lambda$ et pour lesquels la distance jusqu'à $k$ est plus petite ou égale à $D_{max}-\lambda$ est noté $R_{k,j}$. Cet ensemble peut être considéré comme l'ensemble des clients qui peuvent être connectés à $j$ à travers $k$ on satisfaisant la contrainte de distance. Soit $i$ un client dans la couche $L_{j,\lambda +1}$. L'ensemble des prédécesseur potentiels dans $L_{j,\lambda}$ est noté $P_{i,j}$. Ainsi au moins un client dans $P_{i,j}$ doit être alloué au fournisseur $j$ pour que $i$ soit connecté à $j$.\newline\indent
+Plus précisément :
+\begin{align*}
+&R_{k,j} = \{ v | \lambda < d_{v,j} \wedge d_{v,k}\leq D_{max}-\lambda \} \\ 
+&\forall k \in L_{j,\lambda}, \forall \lambda \in \{ 1,...,D_{max}-1 \}, \forall j \in V_{f}\\
+&P_{i,j} = \{ k \in L_{j,\lambda} \ i \in R_{k,j} \} \forall i \in L_{j,\lambda +1}, \\ 
+&  \forall \lambda \in \{ 1,...,D_{max}-1 \}, \forall j \in V_{f}
+\end{align*}
+Ainsi les inégalités des couches sont définies comme suit : 
+\begin{equation}\label{eq:layers}
+\begin{aligned}
+x_{i,j} \leq \sum_{k\in P_{i,j}}{x_{k,j}} \forall i \in L_{j,\lambda +1}, \\ \forall \lambda \in \{ 1,...,D_{max}-1 \}, \forall j \in V_{f}
+\end{aligned}
+\end{equation}
+Comme tout client n'apparaît qu'au plus une fois dans une couche $L_{j,\lambda}$ pour tous les fournisseurs $j \in V_{f}$,le nombre d'inégalités des couches est au plus $n_{c}\times n_{f}$.
 \section{Résultats expérimentaux}
 das
 \section{Discussion}
