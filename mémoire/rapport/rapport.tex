@@ -8,7 +8,7 @@
 \usepackage{makeidx}
 \usepackage{multicol}
 \usepackage{lipsum}
-\usepackage[left=3cm,top=2cm,right=3cm]{geometry}
+\usepackage[left=2.5cm,top=2cm,right=2.5cm]{geometry}
 \begin{document}
 \begin{titlepage}
 \begin{center}
@@ -27,7 +27,7 @@
 \tableofcontents
 \pagebreak
 \begin{abstract}
-\lipsum[1]
+%\lipsum[1]
 \end{abstract}
 \begin{multicols}{2}
 \section{Introduction}
@@ -88,7 +88,7 @@ x_{i,j} \in \{0,1 \} \ \forall (i,j) \in V_{c}\times V_{f}
 M_{min}\geq 0
 \end{equation}
 \eqref{eq:Obj} est la fonction objectif: maximiser la marge minimale pour tous les fournisseurs. \eqref{eq:powDem} définit la marge minimale pour tous les fournisseurs. La contrainte \eqref{eq:oneFeeder} assure que chaque client soit alloué à 1 fournisseur et \eqref{eq:N_j} assure qu'un client ne soit pas alloué à un fournisseur situé à une distance supérieure à $D_{max}$. Les contraintes \eqref{eq:connect} et \eqref{eq:dist} sont difficile à enforcer, ils seront expliquer en détail dans la section à suivre. La contrainte \eqref{eq:0_1} assure l'intégralité de solution et \eqref{eq:Mmin_0} la non-négativité.\newline \indent
-Le modèle de programmation linéaire principale se compose des contraintes \eqref{eq:Obj}-\eqref{eq:N_j}, \eqref{eq:0_1} ,\eqref{eq:Mmin_0} ainsi que des \textit{layer inequalities} (inégalités des couches), qui seront expliqués plus tard. Les \textit{layer inequalities} n'aident pas seulement à atteindre la solution optimale, mais aussi à converger plus rapidement.
+Le modèle de programmation linéaire principal se compose des contraintes \eqref{eq:Obj}-\eqref{eq:N_j}, \eqref{eq:0_1} ,\eqref{eq:Mmin_0} ainsi que des \textit{layer inequalities} (inégalités des couches), qui seront expliqués plus tard. Les \textit{layer inequalities} n'aident pas seulement à atteindre la solution optimale, mais aussi à converger plus rapidement.
 \subsection{Layer inequalities}
 Les layer inequalities restreignent le problème principal pour qu'il n'assume pas de solutions qui ne seront jamais bonnes. Les layer inequalities fonctionnen comme suit : les clients se trouvant à une distance $\lambda$ au fournisseur $j$ dans le graphe appartiennent à la couche $L_{j,\lambda}$. Ainsi $\forall j \in V_{f}$ et $\forall \lambda \in \{1,...,D_{max} \}$, tout client $i \in L_{j,\lambda + 1}$ peut être alloué au fournisseur $j$ si et seulement si il y a au moins un client $k \in L_{j,\lambda}$ qui lui aussi est alloué au fournisseur $j$. Cette contrainte peut s'écrire : 
 \begin{align*}
@@ -110,6 +110,39 @@ x_{i,j} \leq \sum_{k\in P_{i,j}}{x_{k,j}} \forall i \in L_{j,\lambda +1}, \\ \fo
 \end{aligned}
 \end{equation}
 Comme tout client n'apparaît qu'au plus une fois dans une couche $L_{j,\lambda}$ pour tous les fournisseurs $j \in V_{f}$,le nombre d'inégalités des couches est au plus $n_{c}\times n_{f}$.
+\subsection{Méthode des plans sécants}
+\subsubsection*{Coupes de connectivité}
+Les inégalités des couches sont efficace mais il ne suffisent pas pour enforcer la connectivité de la solution, c'est la raison pourquoi des coupes de connectivité sont ajoutées au problème principal. \newline \indent
+Chaque fois que le problème principal est résolu, le component connecté associé avec le fournisseur $j$, noté $CC_{j}$ est construit pour tout $j$ dans $V_{f}$. L'ensemble des clients qui sont alloués au fournisseur $j$ mais qui ne sont pas dans $CC_{j}$ est noté $O_{j}$.\newline \indent
+Si $O_{j}$ est non vide alors les clients alloué au fournisseur $j$ ne forment pas un component connecté, la solution n'est pas admissible et une coupe de connectivité est requise. Soit $CS_{j}$ l'ensemble des clients adjacent à $CC_{j}$ mais qui sont alloués à un fournisseur différent de $j$. $CS_{j}$ peut être appelé ensemble de coupe (\textit{cut set}) : enlever ses clients de $G$ isolerait les clients dans $CC_{j}$ du reste du graphe, particulièrement de $O_{j}$. Ainsi, pour que les clients dans $O_{j}$ soient atteignables depuis $j$, au moins un client dans $CS_{j}$ doit être alloué au fournisseur $j$. On peut l'écrire comme suit : 
+\begin{equation}\label{eq:connect1}
+\sum_{i \in O_{j}}{x_{i,j}} \leq |O_{j}|\sum_{i \in CS_{j}}{x_{i,j}} \ \forall j \in V_{f}
+\end{equation}
+L'inégalité \eqref{eq:connect1} représente une coupe de connectivité. En théorie, une solution connectée peut être atteinte en intégrant les coupes de connectivité au modèle principal, or ce serait inefficace et requerrait un grand nombre d'itérations. Ainsi, à la place de générer une seule coupe de connectivité pour le fournisseur $j$, le nombre de coupes de connectivité à ajouter au problème principal est égal au nombre de composants connectés dans $O_{j}$. Ceci requiert la construction de $C_{j}$, l'ensemble de tous les composants connectés dans $O_{j}$. Soient $CC$ un composant connecté dans $C_{j}$ et $CS$ l'ensemble des clients adjacents à $CC$  qui ont un fournisseur différent de $j$. Pour qu'un client dans $CC$ puissent être connecté au fournisseur $j$, au moins un client dans $CS$ doit aussi être alloué à $j$. La version simplifié d'une coupe de connectivité peut être écrite comme suit :
+\begin{align*}
+&x_{i,j} \leq |O_{j}|\sum_{k \in CS}{x_{k,j}} \ \forall i \in CC, \\ 
+&\forall CC \in C_{j}, \forall j \in V_{f}\\ 
+\end{align*}
+Pour diminuer le nombre de coupes de connectivité, une seule coupe de connectivité est générée pour chaque component connecté $CC$ dans $O_{j}$, pour tout $j \in V_{f}$. D'abord, un client $i_{cc} \in CC$ se trouvant à une distance de $j$ qui est minimale entre tous les clients $i \in CC$ est choisi aléatoirement. Ensuite tous les clients $k$ dans $CS$ tels que $d_{k,j}+d_{k,i_{cc}}>D_{max}$ sont enlevés de $CS$. Ils ne sont pas utiles pour connecter $i_{cc}$ à $CC_{j}$ dans l'itération suivante de l'algorithme des plans sécants. Plus précisément, la coupe de connectivité associée à $CC$ est
+\begin{equation}
+\begin{aligned}
+x_{i,j} \leq  \sum_{\substack{k \in CS \\d_{k,j}+d_{k,i_{cc}}\leq D_{max}}}{x_{k,j}} \\  
+\forall CC \in C_{j}, \forall j \in V_{f}\\ 
+\end{aligned}
+\end{equation}
+\subsubsection*{Coupes de distance}
+Pour tout fournisseur $j \in V_{f}$, les contraintes de distance ne sont vérifiées que lorsque $j$ et ses clients forment un component connecté. Il peut paraître étonnant que cette contrainte puisse être violée si on n'alloue que des clients de $N_{j}$ à $j$, or une situation peut arriver où des clients se trouvant sur les plus court chemins entre les clients alloués à $j$ et $j$ sont alloués à un fournisseur différent et peuvent ainsi bloquer l'utilisation du plus court chemin, ce qui allonge les chemins restants et rend possible le dépassage de la longueur maximale $D_{max}$.\newline \indent
+Comme les contraintes de distance ne sont vérifiées que lorsque les contraintes de connectivité sont satisfaites pour un fournisseur $j$, $O_{j}$ est vide mais l'ensemble $CS_{j}$ est construit quand même. Soit $F_{j}$ l'ensemble des clients alloués à $j$ à une distance de $D_{max}+1$ de $j$ dans la solution courante.\newline \indent
+Une version simplifée des coupes de distance dit que pour diminuer la distance entre $j$ et un client $i$ dans $F_{j}$, au moins un client dans $CS_{j}$ doit être alloué à $j$:
+\begin{equation*}
+x_{i,j} \leq \sum_{k \in CS_{j}}{x_{k,j}} \ \forall i \in F_{j}, \forall j \in V_{f}
+\end{equation*}
+À nouveau, on diminue le nombre de coupe de distance:
+\begin{equation}
+\begin{aligned}
+x_{i,j} \leq \sum_{\substack{k \in CS \\d_{k,j}+d_{k,i}\leq D_{max}}}{x_{k,j}} \ \forall i \in F_{j}, \forall j \in V_{f}
+\end{aligned}
+\end{equation}
 \section{Résultats expérimentaux}
 das
 \section{Discussion}
