@@ -33,11 +33,11 @@ class Graph:
                 self.clients[c.getName()]=c
             self.graph.append(deepcopy(row))
 
-    def createFeeders(self):
+    def createFeeders(self,step=2):
         pow = self.graphDemand#randint(self.graphDemand//(self.dimI//2),self.graphDemand//(self.dimI//2)+10)#
         #  // self.dimI + 1
         #pow = self.graphDemand  # // self.dimI + 1
-        for i in range(0, self.dimI, 2):
+        for i in range(0, self.dimI, step):
             j = randint(1, self.dimJ - 1)
             feeder = Feeder(i, j, pow)
             self.clients.pop(self.graph[i][j])
@@ -145,7 +145,6 @@ class Graph:
                 if i in self.setP[j]:
                     count+=1
             if count == 0 :
-                print("failed")
                 return False
         return True
 
@@ -246,7 +245,7 @@ class Graph:
 
     def setUp(self,dataFile):
         self.generateClients()
-        self.createFeeders()
+        self.createFeeders(2)
         self.connectNeighbours()
         self.createAdjMat()
         self.Floyd()
@@ -257,8 +256,9 @@ class Graph:
         if self.checkDistanceFeasibility():
             print("success")
             self.writeToFile(dataFile)
-        #else:
-        #    self.setUp(dataFile)
+        else:
+            print("failed")
+            #self.__init__(self.dimI,self.dimJ)
 
     def writeToFile(self, filename):
         try:

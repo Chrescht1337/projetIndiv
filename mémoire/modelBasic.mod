@@ -15,8 +15,7 @@ check:
 	sum {i in CLIENTS} demand[i]<= pow;
 
 var Min>=0;
-var allocated {FEEDERS,CLIENTS} binary ;
-
+var allocated {FEEDERS,CLIENTS} binary ;	#decision variable which specifies if a client is allocated to a feeder or not
 set SET_OF_O {0..T,FEEDERS} default {};		#set of clients in N[j] not forming a connected component with j
 set SET_OF_CS {0..T,FEEDERS} default {};	#set of clients surrounding the connected component CC[j] not allocated to j
 set SET_OF_C {0..T,FEEDERS,CLIENTS} default {};		#set of connected components in O
@@ -28,10 +27,7 @@ set SET_OF_CS_RELEVANT_FOR_CLIENT_IN_F{0..T,FEEDERS,CLIENTS} default {};
 set SET_OF_CONNECTIVITY_CUTS_FEEDERS{0..T} default {};
 set SET_OF_DISTANCE_CUTS_FEEDERS{0..T} default {};
 
-
 maximize Obj:
-	#pow-allocated[j,i]*demand[i];
-	#pow-sum{i in CLIENTS}allocated[j,i]*demand[i];
 	Min;
     
 subject to Margin_over_feeders{j in FEEDERS}:
@@ -45,17 +41,6 @@ subject to one_feeder_per_client {i in CLIENTS}:
 
 subject to zero_if_not_in_N {j in FEEDERS, i in (CLIENTS diff N[j])}:
 	allocated[j,i]=0;
-#subject to demand_for_power_sufficiency {j in FEEDERS}:
-#	power[j]-sum{i in CLIENTS}allocated[j,i]*demand[i]>=0;
-	
-#subject to eq24{j in CONNECTIVITY_CUTS_FEEDERS}:
-#	sum{i in O[j]}allocated[j,i]<=card(O[j])*sum{k in CS[j]}allocated[j,k];
-	
-#subject to eq25{j in CONNECTIVITY_CUTS_FEEDERS,v in C_FIRST_CLIENTS[j]}:#, i_cc in }:
-#	allocated[j,C_MIN_DISTANCE_CLIENT[j,v]]<=sum{k in CS_RELEVANT_FOR_CC[j,v]}allocated[j,k];
-
-#subject to eq26{j in DISTANCE_CUTS_FEEDERS,i in F[j]}:
-#	allocated[j,i]<=sum{k in CS_RELEVANT_FOR_CLIENT_IN_F[j,i]}allocated[j,k];
 	
 subject to eq224{iter in 0..T,j in SET_OF_CONNECTIVITY_CUTS_FEEDERS[iter]}:	
 	sum{i in SET_OF_O[iter,j]}allocated[j,i]<=card(SET_OF_O[iter,j])*sum{k in SET_OF_CS[iter,j]}allocated[j,k];
