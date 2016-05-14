@@ -5,9 +5,10 @@ from Feeder import *
 
 
 class Graph:
-    def __init__(self, dimI, dimJ):
+    def __init__(self, dimI, dimJ,step=2):
         self.dimI = dimI
         self.dimJ = dimJ
+        self.step=step
         self.graph = []
         self.adjacencyMatrix = dict()
         self.clients = dict()
@@ -20,7 +21,7 @@ class Graph:
         self.minClientDemand = 1
         self.maxClientDemand = 100
         self.graphDemand = 0
-        self.maxDistance = dimI*dimJ//(dimI )+1
+        self.maxDistance = dimJ+1
 
     def generateClients(self):
         for i in range(self.dimI):
@@ -33,11 +34,11 @@ class Graph:
                 self.clients[c.getName()]=c
             self.graph.append(deepcopy(row))
 
-    def createFeeders(self,step=2):
+    def createFeeders(self):
         pow = self.graphDemand#randint(self.graphDemand//(self.dimI//2),self.graphDemand//(self.dimI//2)+10)#
         #  // self.dimI + 1
         #pow = self.graphDemand  # // self.dimI + 1
-        for i in range(0, self.dimI, step):
+        for i in range(0, self.dimI, self.step):
             j = randint(1, self.dimJ - 1)
             feeder = Feeder(i, j, pow)
             self.clients.pop(self.graph[i][j])
@@ -245,7 +246,7 @@ class Graph:
 
     def setUp(self,dataFile):
         self.generateClients()
-        self.createFeeders(2)
+        self.createFeeders()
         self.connectNeighbours()
         self.createAdjMat()
         self.Floyd()

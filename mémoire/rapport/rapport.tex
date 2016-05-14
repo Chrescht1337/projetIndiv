@@ -160,7 +160,7 @@ x_{i,j} \leq \sum_{\substack{k \in CS \\d_{k,j}+d_{k,i}\leq D_{max}}}{x_{k,j}} \
 La figure \ref{fig:algo} (à la fin du document) présente le déroulement de l'algorithme de la méthode des plans sécants. Comme déjà mentionné, le modèle de programmation linéaire principal se compose des contraintes \eqref{eq:Obj}-\eqref{eq:N_j} et \eqref{eq:0_1} -\eqref{eq:layers}. Après chaque résolution du problème principal on vérifie si on doit ajouter des contraintes supplémentaires au problème, si non cela veut dire que la solution courante satisfait toutes les contraintes et elle est finale.
 \section{Résultats expérimentaux}
 \subsection{Génération de graphes}
-Les graphes générés pour tester l'algorithme sont rectangulaires. Un fournisseur se trouve dans chaque n-ième ligne du graphe, leur position dans la ligne étant déterminée aléatoirement. Le reste du graphe est rempli avec des clients aléatoires. La demande d'un client est un nombre entier entre 1 et 100. Chaque client est connecté à ses voisins horizontaux et verticaux.
+Les graphes générés pour tester l'algorithme sont rectangulaires. Un fournisseur se trouve dans chaque n-ième ligne du graphe, leur position dans la ligne étant déterminée aléatoirement. Le reste du graphe est rempli avec des clients aléatoires. La demande d'un client est un nombre entier entre 1 et 100. Chaque client est connecté à ses voisins horizontaux et verticaux. La distance maximale $D_{max}$ est égale à $dim_{y}+1$.
 \begingroup
     \centering
     \includegraphics[width=\linewidth]{graph4x4.pdf}
@@ -172,16 +172,25 @@ Les expériences ont toutes été réalisées sur Ubuntu 14.04 LTS tournant dans
 \hline 
 dim & n &$n_{f}$ & $n_{c}$ & deg & temps & iter & inst \\ 
 \hline 
-5x5 & 2 & 3 & 22 & 3.2 & 7.48 & 19.3 & 10  \\ 
+5x5 & 2 & 3 & 22 & 3.2 & 7.48 & 19.3 & 10 \\ 
 \hline 
-6x6 & 2 & 3 & 33 & 3.33 & 92.13 & 63.18  & 11\\ 
+6x6 & 2 & 3 & 33 & 3.33 & 92.13 & 63.18  & 11 \\ 
 \hline 
-7x7 & 2 & 4 & 45 & 3.43 & • & • & 0 \\ 
+7x7 & 2 & 4 & 45 & 3.43 & 13245.44 & 110.8 & 5 \\ 
+\hline
+\hline
+5x5 & 3 & 2 & 23 & 3.2 & 1.48 & 16.3 & 10  \\ 
+\hline 
+6x6 & 3 & 2 & 34 & 3.33 & 10.34 & 79.27  & 11\\ 
+\hline 
+\hline
+6x6 & 4 & 2 & 34 & 3.33 & 5.90 & 53.82 & 11 \\ 
 \hline
 \end{tabular}}
 La colonne \textit{dim} indique les dimensions du graphe. La colonne \textit{n} spécifie la valeur du pas de lignes lors de création du graphe pour l'insertion d'un fournisseur. Les colonnes $n_{f}$ et $n_{c}$ indiquent évidemment le nombre de fournisseurs et de clients dans le graphe. La colonne \textit{deg} donne le degré moyen des sommets dans le graphe. La colonne \textit{temps} donne la durée d'exécution moyenne du programme en secondes CPU, \textit{iter} indique le nombre d'itérations moyen de l'algorithme. Le nombre d'instances de graphes considéré pour déterminé les valeurs est donné dans la colonne \textit{inst}.
 \subsection{Discussion}
-On voit très bien l'augmentation du temps de calcul en n'ajoutant que 11 clients au graphe de 4$\times$4 pour arriver aux graphes 5$\times$5, le facteur d'augmentation est plus grand que 10.
+Pour n=2, on voit très bien l'augmentation du temps de calcul en n'ajoutant que 11 clients aux graphes de 5$\times$5 pour arriver aux graphes 6$\times$6, le rapport est plus grand que 10. Le rapport pour n=3 reste proche de 10. Lorsqu'on diminue le nombre de fournisseur dans le graphe, la solution est atteinte plus vite. Ceci est due à la diminution des combinations d'allocations : les différents set $N_{j}$ ont moins d'intersections entre eux vue l'écart entre les fournisseurs. Si on aurait mis une valeur moins élevée pour $D_{max}$, ce phénomène serait encore plus prononcé.\newline \indent
+Pour les graphes 7$\times$7, on a une augmentation énorme du temps de calcul en comparaison avec les graphes 6$\times$6. Vue le temps de calcul minimum étant de 36.18 secondes CPU et le temps de calcul maximal étant de 62106.7 secondes CPU, ainsi que le nombre bas d'instances générées ne me permettent pas de donner une interprétation significative.
 \section{Conclusion et perspectives}
 
 

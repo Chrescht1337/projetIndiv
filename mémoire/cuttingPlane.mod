@@ -122,6 +122,6 @@ repeat {
 	}	
 }until card(FEASIBLE) =0 ;
 
-display T;
-display _total_solve_user_time;
-reset;
+#display T;
+#display _total_solve_user_time;
+#reset;
