@@ -1,52 +1,34 @@
-\documentclass[12pt,a4paper]{article}
-\usepackage[utf8]{inputenc}
+\documentclass[letterpaper]{article}
 \usepackage[french]{babel}
+\usepackage{natbib,alifexi}
+\usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage{graphicx}
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{amssymb}
 \usepackage{makeidx}
-\usepackage{multicol,caption}
 \usepackage{svg}
 \usepackage{lipsum}
 \usepackage{capt-of}
+\usepackage{url}
 \usepackage{verbatimbox}
-\usepackage[left=2.5cm,top=2cm,right=2.5cm]{geometry}
-\newenvironment{Figure}
-  {\par\medskip\noindent\minipage{\linewidth}}
-  {\endminipage\par\medskip}
-\newenvironment{FFigure}
-  {\par\medskip\noindent\minipage{\linewidth}}
-  {\endminipage\par\medskip}  
+\title{Implémentation d'une formulation étendue pour la conception d'un réseau de distribution d'électricité}
+\author{Christian Frantzen \\
+\mbox{}\\
+Université Libre de Bruxelles, Bruxelles, Belgique \\
+christian.frantzen@ulb.ac.be}
 \begin{document}
-\begin{titlepage}
-\begin{center}
-\textbf{\textsc{UNIVERSIT\'E LIBRE DE BRUXELLES}}\\
-\textbf{\textsc{Faculté des Sciences}}\\
-\textbf{\textsc{Département d'Informatique}}
-\vfill{}\vfill{}
-\begin{center}{\Huge Implémentation d'une formulation étendue pour la conception d'un réseau de distribution d'électricité}\end{center}{\Huge \par}
-\begin{center}{\large Frantzen Christian}\end{center}{\Huge \par}
-\vfill{}\vfill{}
-\begin{flushleft}{\large \textbf{Superviseur : Bernard Fortz}}\hfill{}\end{flushleft}{\large\par}
-\vfill{}\vfill{}\enlargethispage{3cm}
-\textbf{Année académique 2015~-~2016}
-\end{center}
-\end{titlepage}
-\tableofcontents
-\pagebreak
+\maketitle
 \begin{abstract}
-
+Ce travail traite l'article de \citep*{Rossi} qui proposent plusieurs manières pour résoudre le problème de la conception d'une configuration d'un réseau de distribution d'électricité,  le but principal étant de maximiser la marge minimale des différents fournisseurs. De leurs trois approches proposées, on ne va traiter qu'une seule en détail : la formulation orientée sommets avec méthode de plans coupants. On commence avec une étude des conditions de faisabilité, puis on présente la formulation en détail, suivi de résultats expérimentaux et d'une interprétation de ceux-ci. 
 \end{abstract}
-\begin{multicols}{2}
 \section{Introduction}
-La transition énergétique pose beaucoup de nouveaux défis pour l'industrie. Souvent de grandes centrales de production d'électricité sont remplacées par plusieurs centrales plus petites. Ceci nécessite un changement important dans la configuration du réseau. La configuration d'un réseau de distribution d'électricité a un impact important sur des paramètres physiques comme perte d'énergie de de tensionainsi que la charge des points-clés d'un réseau comme les transformateurs. Pour prendre en compte tous ces facteurs mais en gardant un niveau d'abstraction élevé, Rossi et al \cite{Rossi} introduisent un paramètre de distance maximale $D_{max}$. On considère qu'un client alloué à un fournisseur à une distance inférieure à $D_{max}$ n'est pas soumis à des phénomènes de perte d'énergie ou de tension trop importants.\newline \indent
+La transition énergétique pose beaucoup de nouveaux défis pour l'industrie. Souvent de grandes centrales de production d'électricité sont remplacées par plusieurs centrales plus petites. Ceci nécessite un changement important dans la configuration du réseau. La configuration d'un réseau de distribution d'électricité a un impact important sur des paramètres physiques comme perte d'énergie, de tension ainsi que la charge des points-clés d'un réseau comme les transformateurs. Pour prendre en compte tous ces facteurs mais en gardant un niveau d'abstraction élevé, \citep*{Rossi} introduisent un paramètre de distance maximale $D_{max}$. On considère qu'un client alloué à un fournisseur à une distance inférieure à $D_{max}$ n'est pas soumis à des phénomènes de perte d'énergie ou de tension trop importants.\newline \indent
 Le but des algorithmes présentés dans leur article est de maximiser la marge minimale des différentes sources du réseau. La marge d'une source est la différence entre sa capacité de production d'énergie et la demande totale des clients connectés à cette source.\newline \indent
-Avoir une grande marge une caractéristique de robustesse d'un réseau face à des augmentations spontanée de la demande.
+Avoir une grande marge est une caractéristique de robustesse d'un réseau face à des augmentations spontanées de la demande.
 \section{Approche}
 \subsection{Définition du problème}
-Pour résoudre le problème, on représente le réseau par un graphe non-dirigé $G(V,E)$, où $V$ est l'ensemble des sommets et $E$ est l'ensembles des arrêtes. L'ensemble des sommets $V$ est l'union des ensembles disjoints des clients  $V_{c}$ et des fournisseurs $V_{f}$. L'ensemble $E$ représente les différents connexions entre les sommets. $n_{f}=|V_{f}| $ est le nombre de fournisseurs dans le réseau et $n_{c}=|V_{c}| $ est le nombre de clients. Chaque sommet $j$ dans $V_{f}$ a un poids $pow_{j}$ qui représente sa capacité maximale de production d'énergie. Chaque sommet $i$ dans $V_{c}$ a un poids $dem_{i}$ qui représente a demande d'énergie.La distance minimale entre 2 sommets $i$ et $j$ dans $G$ est donnée par $d_{i,j}$ est représente un nombre de sauts. Comme $G$ est non-dirigé, $d_{i,j}=d_{j,i} \forall (i,j) \in V \times V$. L'ensemble des clients pour lesquelles la distance minimale entre eux et le fournisseur $j$ est inférieure à $D_{max}$ est noté $N_{j} \forall j \in V_{f}$. $N_{j}$ est l'ensemble des clients qui peuvent potentiellement être connectés au fournisseur $j$. S'il existe un client qui ne se retrouve dans aucun ensemble $N_{j}$, la résolution est infaisable.
+Pour résoudre le problème, on représente le réseau par un graphe non-dirigé $G(V,E)$, où $V$ est l'ensemble des sommets et $E$ est l'ensembles des arrêtes. L'ensemble des sommets $V$ est l'union des ensembles disjoints des clients  $V_{c}$ et des fournisseurs $V_{f}$. L'ensemble $E$ représente les différents connexions entre les sommets. $n_{f}=|V_{f}| $ est le nombre de fournisseurs dans le réseau et $n_{c}=|V_{c}| $ est le nombre de clients. Chaque sommet $j$ dans $V_{f}$ a un poids $pow_{j}$ qui représente sa capacité maximale de production d'énergie. Chaque sommet $i$ dans $V_{c}$ a un poids $dem_{i}$ qui représente sa demande d'énergie. La distance minimale entre 2 sommets $i$ et $j$ dans $G$ est donnée par $d_{i,j}$ et représente un nombre de sauts. Comme $G$ est non-dirigé, $d_{i,j}=d_{j,i}\ \forall (i,j) \in V \times V$. L'ensemble des clients pour lesquelles la distance minimale entre eux et le fournisseur $j$ est inférieure à $D_{max}$ est noté $N_{j}\ \forall j \in V_{f}$. $N_{j}$ est l'ensemble des clients qui peuvent potentiellement être connectés au fournisseur $j$. S'il existe un client qui ne se retrouve dans aucun ensemble $N_{j}$, la résolution est infaisable.
 \subsection{Contraintes}
 Une configuration est admissible si elle respecte les contraintes suivantes :
 \begin{enumerate}
@@ -55,14 +37,14 @@ Une configuration est admissible si elle respecte les contraintes suivantes :
 \item Contrainte de distance : Pour minimiser les phénomènes de perte d'énergie et de tension, les clients ne doivent pas être alloués à des fournisseurs à une distance supérieure à $D_{max}$.   
 \end{enumerate}
 \subsection{Conditions de faisabilité}
-Pour que la résolution du problème soit faisable, il existe 2 conditions nécessaire pour garantir la faisabilité :
+Pour que la résolution du problème soit faisable, il existe 2 conditions nécessaires pour garantir la faisabilité :
 \begin{itemize}
 \item La somme des capacités des fournisseurs doit satisfaire la demande totale des clients : \begin{equation*}
 \sum_{j \in V_{f}}{pow_{j}}  = \sum_{i \in V_{c}}{dem_{i}}
 \end{equation*}
-\item Pour chaque client il existe un ou plusieurs fournisseurs à une distance inférieure ou égale à $D_{max}$ :
+\item Pour chaque client $i$ il existe un ou plusieurs fournisseurs $j$ à une distance inférieure ou égale à $D_{max}$ :
 \begin{equation*}
-\forall i \in V_{c} :  \exists j \in V_{f} \mid dist(j,i) \leq D_{max}
+\forall i \in V_{c} :  \exists j \in V_{f} \mid d_{j,i} \leq D_{max}
 \end{equation*}
 \end{itemize}
 Si ces deux conditions ne sont pas satisfaites, on peut démontrer que la résolution du problème est infaisable.\\
@@ -88,16 +70,14 @@ x_{i,j}=0 \ \ \forall j \in V_{f},\forall i \notin N_{j}
 \end{equation}
 \begin{equation}
 \begin{aligned}\label{eq:connect}
-&\mbox{Les clients alloués au fournisseurs j} \\ 
-&\mbox{ forment une composante connexe } \\
-& \forall j \in V_{f}
+&\mbox{Les clients alloués au fournisseurs $j$ forment}\\
+&\mbox{ une composante connexe }  \forall j \in V_{f}
 \end{aligned}
 \end{equation}
 \begin{equation}\label{eq:dist}
 \begin{aligned}
-&\mbox{La distance d'un client i à son}\\ 
-&\mbox{fournisseur est inférieure ou égale } \\
-& \mbox{à } D_{max} \ \forall i \in V_{c}
+&\mbox{La distance d'un client $i$ à son fournisseur est}\\ 
+&\mbox{ inférieure ou égale à } D_{max} \ \forall i \in V_{c}
 \end{aligned}
 \end{equation}
 \begin{equation}\label{eq:0_1}
@@ -106,14 +86,14 @@ x_{i,j} \in \{0,1 \} \ \forall (i,j) \in V_{c}\times V_{f}
 \begin{equation}\label{eq:Mmin_0}
 M_{min}\geq 0
 \end{equation}
-\eqref{eq:Obj} est la fonction objectif: maximiser la marge minimale pour tous les fournisseurs. \eqref{eq:powDem} définit la marge minimale pour tous les fournisseurs. La contrainte \eqref{eq:oneFeeder} assure que chaque client soit alloué à 1 fournisseur et \eqref{eq:N_j} assure qu'un client ne soit pas alloué à un fournisseur situé à une distance supérieure à $D_{max}$. Les contraintes \eqref{eq:connect} et \eqref{eq:dist} sont difficile à imposer, elles seront expliquées en détail dans la section à suivre. La contrainte \eqref{eq:0_1} assure l'intégralité de solution et \eqref{eq:Mmin_0} la non-négativité.\newline \indent
-Le modèle de programmation linéaire principal se compose des contraintes \eqref{eq:Obj}-\eqref{eq:N_j}, \eqref{eq:0_1} ,\eqref{eq:Mmin_0} ainsi que des \textit{layer inequalities} (inégalités des couches), qui seront expliqués plus tard. Les \textit{layer inequalities} n'aident pas seulement à atteindre la solution optimale, mais aussi à converger plus rapidement.
+\eqref{eq:Obj} est la fonction objectif: maximiser la marge minimale pour tous les fournisseurs. \eqref{eq:powDem} définit la marge minimale pour tous les fournisseurs. La contrainte \eqref{eq:oneFeeder} assure que chaque client soit alloué à 1 fournisseur et \eqref{eq:N_j} assure qu'un client ne soit pas alloué à un fournisseur situé à une distance supérieure à $D_{max}$. Les contraintes \eqref{eq:connect} et \eqref{eq:dist} sont difficiles à imposer, elles seront expliquées en détail dans la section à suivre. La contrainte \eqref{eq:0_1} assure l'intégralité de solution et \eqref{eq:Mmin_0} la non-négativité.\newline \indent
+Le modèle de programmation linéaire principal se compose des contraintes \eqref{eq:Obj}-\eqref{eq:N_j}, \eqref{eq:0_1} ,\eqref{eq:Mmin_0} ainsi que des \textit{layer inequalities} (inégalités des couches), qui seront expliquées plus tard. Les \textit{layer inequalities} n'aident pas seulement à atteindre la solution optimale, mais aussi à converger plus rapidement.
 \subsection{Layer inequalities}
-Les layer inequalities restreignent le problème principal pour qu'il n'admet pas de solutions qui ne seront jamais bonnes. Les layer inequalities fonctionnen comme suit : les clients se trouvant à une distance $\lambda$ au fournisseur $j$ dans le graphe appartiennent à la couche $L_{j,\lambda}$. Ainsi $\forall j \in V_{f}$ et $\forall \lambda \in \{1,...,D_{max} \}$, tout client $i \in L_{j,\lambda + 1}$ peut être alloué au fournisseur $j$ si et seulement si il y a au moins un client $k \in L_{j,\lambda}$ qui lui aussi est alloué au fournisseur $j$. Cette contrainte peut s'écrire : 
+Les layer inequalities restreignent le problème principal pour qu'il n'admet pas de solutions qui ne seront jamais bonnes. Les layer inequalities fonctionnent comme suit : les clients se trouvant à une distance $\lambda$ au fournisseur $j$ dans le graphe appartiennent à la couche $L_{j,\lambda}$. Ainsi $\forall j \in V_{f}$ et $\forall \lambda \in \{1,...,D_{max} \}$, tout client $i \in L_{j,\lambda + 1}$ peut être alloué au fournisseur $j$ si et seulement si il y a au moins un client $k \in L_{j,\lambda}$ qui lui aussi est alloué au fournisseur $j$. Cette contrainte peut s'écrire : 
 \begin{align*}
 x_{i,j} \leq \sum_{k \in L_{j,\lambda} }{x_{k,j}} \forall i \in L_{j,\lambda +1},\\ \forall \lambda \in \{ 1,...,D_{max}-1 \}, \forall j \in V_{f}
 \end{align*}
-Ces inégalités imposent des conditions nécessaires pour la connectivité des la solution ainsi que partiellement prenant en compte les exigences de distance. Elles peuvent être rendues plus stricte en ajoutant la condition que pour tout client $i$ dans $L_{j,\lambda +1}$, seul des clients $k$ dans $L_{j,\lambda}$ qui se trouvent à une distance plus petite ou égale à $D_{max}-\lambda$ de $i$ avec tous les clients alloués sur le chemin entre $i$ et $k$ se trouvant à une distance strictement plus grande que $\lambda$ de $j$ peuvent assurer la connectivité de la solution.S'il n'y a pas de chemin entre $k$ et $i$ d'une longueur inférieur ou égale à $D_{max}-\lambda$, alors le client n'est pas aidant pour connecter $i$ à $j$. De plus, si sur les chemins entre $k$ et $i$ se trouvent un client $v \neq i$ pour lequel la distance à $j$ est plus petite ou égale à $\lambda$, alors le client $i$ peut être connecté à j à travers $v$ et on n'a pas besoin du client $k$.\newline \indent
+Ces inégalités imposent des conditions nécessaires pour la connectivité de la solution en prenant partiellement en compte les exigences de distance. Elles peuvent être rendues plus strictes en ajoutant la condition que pour tout client $i$ dans $L_{j,\lambda +1}$, seul des clients $k$ dans $L_{j,\lambda}$ qui se trouvent à une distance plus petite ou égale à $D_{max}-\lambda$ de $i$ avec tous les clients alloués sur le chemin entre $i$ et $k$ se trouvant à une distance strictement plus grande que $\lambda$ de $j$ peuvent assurer la connectivité de la solution.S'il n'y a pas de chemin entre $k$ et $i$ d'une longueur inférieur ou égale à $D_{max}-\lambda$, alors le client n'est pas aidant pour connecter $i$ à $j$. De plus, si sur les chemins entre $k$ et $i$ se trouve un client $v \neq i$ pour lequel la distance à $j$ est plus petite ou égale à $\lambda$, alors le client $i$ peut être connecté à $j$ à travers $v$ et on n'a pas besoin du client $k$.\newline \indent
 Pour construire les layer inequalities, on a besoin de deux ensembles, $R_{k,j}$ et $P_{i,j}$. Soit k un client dans $L_{j,\lambda}$. L'ensemble des clients pour lesquels la distance jusqu'à $j$ est strictement plus grande que $\lambda$ et pour lesquels la distance jusqu'à $k$ est plus petite ou égale à $D_{max}-\lambda$ est noté $R_{k,j}$. Cet ensemble peut être considéré comme l'ensemble des clients qui peuvent être connectés à $j$ à travers $k$ on satisfaisant la contrainte de distance. Soit $i$ un client dans la couche $L_{j,\lambda +1}$. L'ensemble des prédécesseur potentiels dans $L_{j,\lambda}$ est noté $P_{i,j}$. Ainsi au moins un client dans $P_{i,j}$ doit être alloué au fournisseur $j$ pour que $i$ soit connecté à $j$.\newline\indent
 Plus précisément :
 \begin{align*}
@@ -128,21 +108,21 @@ Ainsi les inégalités des couches sont définies comme suit :
 x_{i,j} \leq \sum_{k\in P_{i,j}}{x_{k,j}} \forall i \in L_{j,\lambda +1}, \\ \forall \lambda \in \{ 1,...,D_{max}-1 \}, \forall j \in V_{f}
 \end{aligned}
 \end{equation}
-Comme tout client n'apparaît qu'au plus une fois dans une couche $L_{j,\lambda}$ pour tous les fournisseurs $j \in V_{f}$,le nombre d'inégalités des couches est au plus $n_{c}\times n_{f}$.
+Comme tout client n'apparaît qu'au plus une fois dans une couche $L_{j,\lambda}$ pour tous les fournisseurs $j \in V_{f}$, le nombre d'inégalités des couches est au plus $n_{c}\times n_{f}$.
 \subsection{Méthode des plans coupants}
 \subsubsection*{Coupes de connectivité}
 Les inégalités des couches sont efficaces mais elles ne suffisent pas pour imposer la connectivité de la solution, c'est la raison pourquoi des coupes de connectivité sont ajoutées au problème principal. \newline \indent
 Chaque fois que le problème principal est résolu, la composante connexe associée avec le fournisseur $j$, notée $CC_{j}$ est construite pour tout $j$ dans $V_{f}$. L'ensemble des clients qui sont alloués au fournisseur $j$ mais qui ne sont pas dans $CC_{j}$ est noté $O_{j}$.\newline \indent
-Si $O_{j}$ est non vide alors les clients alloués au fournisseur $j$ ne forment pas une composante connexe, la solution n'est pas admissible et une coupe de connectivité est requise. Soit $CS_{j}$ l'ensemble des clients adjacent à $CC_{j}$ mais qui sont alloués à un fournisseur différent de $j$. $CS_{j}$ peut être appelé ensemble de coupe (\textit{cut set}) : enlever ses clients de $G$ isolerait les clients dans $CC_{j}$ du reste du graphe, particulièrement de $O_{j}$. Ainsi, pour que les clients dans $O_{j}$ soient atteignables depuis $j$, au moins un client dans $CS_{j}$ doit être alloué au fournisseur $j$. On peut l'écrire comme suit : 
+Si $O_{j}$ est non vide alors les clients alloués au fournisseur $j$ ne forment pas une composante connexe, la solution n'est pas admissible et une coupe de connectivité est requise. Soit $CS_{j}$ l'ensemble des clients adjacents à $CC_{j}$ mais qui sont alloués à un fournisseur différent de $j$. $CS_{j}$ peut être appelé ensemble de coupe (\textit{cut set}) : enlever ses clients de $G$ isolerait les clients dans $CC_{j}$ du reste du graphe, particulièrement de $O_{j}$. Ainsi, pour que les clients dans $O_{j}$ soient atteignables depuis $j$, au moins un client dans $CS_{j}$ doit être alloué au fournisseur $j$. On peut l'écrire comme suit : 
 \begin{equation}\label{eq:connect1}
 \sum_{i \in O_{j}}{x_{i,j}} \leq |O_{j}|\sum_{i \in CS_{j}}{x_{i,j}} \ \forall j \in V_{f}
 \end{equation}
-L'inégalité \eqref{eq:connect1} représente une coupe de connectivité. En théorie, une solution connectée peut être atteinte en intégrant les coupes de connectivité au modèle principal, or ce serait inefficace et requerrait un grand nombre d'itérations. Ainsi, à la place de générer une seule coupe de connectivité pour le fournisseur $j$, le nombre de coupes de connectivité à ajouter au problème principal est égal au nombre de composants connectés dans $O_{j}$. Ceci requiert la construction de $C_{j}$, l'ensemble de tous les composants connectés dans $O_{j}$. Soient $CC$ un composant connecté dans $C_{j}$ et $CS$ l'ensemble des clients adjacents à $CC$  qui ont un fournisseur différent de $j$. Pour qu'un client dans $CC$ puissent être connecté au fournisseur $j$, au moins un client dans $CS$ doit aussi être alloué à $j$. La version simplifié d'une coupe de connectivité peut être écrite comme suit :
+L'inégalité \eqref{eq:connect1} représente une coupe de connectivité. En théorie, une solution connectée peut être atteinte en intégrant les coupes de connectivité au modèle principal, or ce serait inefficace et requerrait un grand nombre d'itérations. Ainsi, à la place de générer une seule coupe de connectivité pour le fournisseur $j$, le nombre de coupes de connectivité à ajouter au problème principal est égal au nombre de composants connectés dans $O_{j}$. Ceci requiert la construction de $C_{j}$, l'ensemble de toutes les composantes connexes dans $O_{j}$. Soit $CC$ une composante connexe dans $C_{j}$ et $CS$ l'ensemble des clients adjacents à $CC$  qui ont un fournisseur différent de $j$. Pour qu'un client dans $CC$ puisse être connecté au fournisseur $j$, au moins un client dans $CS$ doit aussi être alloué à $j$. La version simplifiée d'une coupe de connectivité peut être écrite comme suit :
 \begin{align*}
 &x_{i,j} \leq |O_{j}|\sum_{k \in CS}{x_{k,j}} \ \forall i \in CC, \\ 
 &\forall CC \in C_{j}, \forall j \in V_{f}\\ 
 \end{align*}
-Pour diminuer le nombre de coupes de connectivité, une seule coupe de connectivité est générée pour chaque composante connexe $CC$ dans $O_{j}$, pour tout $j \in V_{f}$. D'abord, un client $i_{cc} \in CC$ se trouvant à une distance de $j$ qui est minimale entre tous les clients $i \in CC$ est choisi aléatoirement. Ensuite tous les clients $k$ dans $CS$ tels que $d_{k,j}+d_{k,i_{cc}}>D_{max}$ sont enlevés de $CS$. Ils ne sont pas utiles pour connecter $i_{cc}$ à $CC_{j}$ dans l'itération suivante de l'algorithme des plans sécants. Plus précisément, la coupe de connectivité associée à $CC$ est
+Pour diminuer le nombre de coupes de connectivité, une seule coupe de connectivité est générée pour chaque composante connexe $CC$ dans $O_{j}$, pour tout $j \in V_{f}$. D'abord, un client $i_{cc} \in CC$ se trouvant à une distance de $j$ qui est minimale entre tous les clients $i \in CC$ est choisi aléatoirement. Ensuite tous les clients $k$ dans $CS$ tels que $d_{k,j}+d_{k,i_{cc}}>D_{max}$ sont enlevés de $CS$. Ils ne sont pas utiles pour connecter $i_{cc}$ à $CC_{j}$ dans l'itération suivante de l'algorithme des plans coupants. Plus précisément, la coupe de connectivité associée à $CC$ est
 \begin{equation}
 \begin{aligned}
 x_{i,j} \leq  \sum_{\substack{k \in CS \\d_{k,j}+d_{k,i_{cc}}\leq D_{max}}}{x_{k,j}} \\  
@@ -164,22 +144,19 @@ x_{i,j} \leq \sum_{\substack{k \in CS \\d_{k,j}+d_{k,i}\leq D_{max}}}{x_{k,j}} \
 \end{equation}
 
 \subsection{Déroulement de l'algorithme}
-La figure \ref{fig:algo} (à la fin du document) présente le déroulement de l'algorithme de la méthode des plans sécants. Comme déjà mentionné, le modèle de programmation linéaire principal se compose des contraintes \eqref{eq:Obj}-\eqref{eq:N_j} et \eqref{eq:0_1} -\eqref{eq:layers}. Après chaque résolution du problème principal on vérifie si on doit ajouter des contraintes supplémentaires au problème, si non cela veut dire que la solution courante satisfait toutes les contraintes et elle est finale.
+La figure \ref{fig:algo} (à la fin du document) présente le déroulement de l'algorithme de la méthode des plans coupants. Comme déjà mentionné, le modèle de programmation linéaire principal se compose des contraintes \eqref{eq:Obj}-\eqref{eq:N_j} et \eqref{eq:0_1} -\eqref{eq:layers}. Après chaque résolution du problème principal on vérifie si on doit ajouter des contraintes supplémentaires au problème, si non cela veut dire que la solution courante satisfait toutes les contraintes et elle est finale.
 \section{Résultats expérimentaux}
 \subsection{Génération de graphes}
-Les graphes générés pour tester l'algorithme sont rectangulaires. Un fournisseur se trouve dans chaque n-ième ligne du graphe, leur position dans la ligne étant déterminée aléatoirement. Le reste du graphe est rempli avec des clients aléatoires. La demande d'un client est un nombre entier entre 1 et 100. Chaque client est connecté à ses voisins horizontaux et verticaux. La distance maximale $D_{max}$ est égale à $dim_{y}+1$.
-%\begingroup
-%    
-%    \includegraphics[width=\linewidth]{graph4x4.pdf}
-%    \captionof{figure}{Représentation d'un graphe 4$\times$4. Les sommets en noirs sont les fournisseurs }\label{fig:algo}
-%\endgroup
-\begin{Figure}
+La génération des graphes tout comme le fichier des données pour l'algorithme est réalisée en Python3. Les graphes générés pour tester l'algorithme sont rectangulaires. Un fournisseur se trouve dans chaque n-ième ligne du graphe, leur position dans la ligne étant déterminée aléatoirement. Le reste du graphe est rempli avec des clients aléatoires. La demande d'un client est un nombre entier entre 1 et 100. Chaque client est connecté à ses voisins horizontaux et verticaux. La distance maximale $D_{max}$ est égale à $dim_{y}+1$.
+\begin{figure}[h]
 	\centering
-	\includegraphics[width=\linewidth]{graph4x4.png}
+	\includegraphics[width=\linewidth]{graph4x4.pdf}
 	\captionof{figure}{Représentation d'un graphe 4$\times$4. Les sommets en noirs sont les fournisseurs }\label{fig:algo}
-\end{Figure}
+\end{figure}
+\subsubsection*{Fichier des données}
+Après la création du graphe, on génère les données nécessaires pour la résolution du problème, commençant avec la matrice comprenant tous les plus courts chemins du graphe, utilisant l'algorithme de Floyd \footnote{\url{https://en.wikipedia.org/wiki/Floyd-Warshall_algorithm }}. Avec cette matrice, on peut établir les différentes couches $L_{j,\lambda}$, ainsi que les 2 ensembles $R_{k,j}$ et $P_{i,j}$. Ensuite on crée les ensembles $N_{j}$. Pour finir on écrit tout dans un fichier de données dans le format AMPL \citep*{AMPL}.
 \subsection{Résultats}
-Les expériences ont toutes été réalisées sur Ubuntu 14.04 LTS tournant dans VMware Workstation 10 tournant sur Windows 10, le processeur étant un Intel Core 4500U à 1.8 GHz avec 4GB de RAM pour la VM et 8GB pour l'ordinateur de base. Le solveur de programmation linéaire utilisé est CPLEX d'IBM.
+Les expériences ont toutes été réalisées sur Ubuntu 14.04 LTS tournant dans VMware Workstation 10 tournant sur Windows 10, le processeur étant un Intel Core 4500U à 1.8 GHz avec 4GB de RAM pour la VM et 8GB pour l'ordinateur de base. Le solveur de programmation linéaire utilisé est CPLEX d'IBM. L'algorithme du problème principal et les méthodes des plans coupants ont été écrits en AMPL.
 \addvbuffer[12pt]{\begin{tabular}{|c|c|c|c|c|c|c|c|}
 \hline 
 dim & n &$n_{f}$ & $n_{c}$ & deg & temps & iter & inst \\ 
@@ -199,24 +176,21 @@ dim & n &$n_{f}$ & $n_{c}$ & deg & temps & iter & inst \\
 6x6 & 4 & 2 & 34 & 3.33 & 5.90 & 53.82 & 11 \\ 
 \hline
 \end{tabular}}
-La colonne \textit{dim} indique les dimensions du graphe. La colonne \textit{n} spécifie la valeur du pas de lignes lors de création du graphe pour l'insertion d'un fournisseur. Les colonnes $n_{f}$ et $n_{c}$ indiquent évidemment le nombre de fournisseurs et de clients dans le graphe. La colonne \textit{deg} donne le degré moyen des sommets dans le graphe. La colonne \textit{temps} donne la durée d'exécution moyenne du programme en secondes CPU, \textit{iter} indique le nombre d'itérations moyen de l'algorithme. Le nombre d'instances de graphes considéré pour déterminé les valeurs est donné dans la colonne \textit{inst}.
+La colonne \textit{dim} indique les dimensions du graphe. La colonne \textit{n} spécifie la valeur du pas de lignes lors de création du graphe pour l'insertion d'un fournisseur. Les colonnes $n_{f}$ et $n_{c}$ indiquent évidemment le nombre de fournisseurs et de clients dans le graphe. La colonne \textit{deg} donne le degré moyen des sommets dans le graphe. La colonne \textit{temps} donne la durée d'exécution moyenne du programme en secondes CPU, \textit{iter} indique le nombre d'itérations moyen de l'algorithme. Le nombre d'instances de graphes considéré pour déterminer les valeurs est donné dans la colonne \textit{inst}.
 \subsection{Discussion}
-Pour n=2, on voit très bien l'augmentation du temps de calcul en n'ajoutant que 11 clients aux graphes de 5$\times$5 pour arriver aux graphes 6$\times$6, le rapport est plus grand que 10. Le rapport pour n=3 reste proche de 10. Lorsqu'on diminue le nombre de fournisseur dans le graphe, la solution est atteinte plus vite. Ceci est due à la diminution des combinations d'allocations : les différents set $N_{j}$ ont moins d'intersections entre eux vue l'écart entre les fournisseurs. Si on avait mis une valeur moins élevée pour $D_{max}$, ce phénomène serait encore plus prononcé.\newline \indent
-Pour les graphes 7$\times$7, on a une augmentation énorme du temps de calcul en comparaison avec les graphes 6$\times$6. Vue le temps de calcul minimum étant de 36.18 secondes CPU et le temps de calcul maximal étant de 62106.7 secondes CPU, ainsi que le nombre bas d'instances générées ne me permettent pas de donner une interprétation significative.
+Pour n=2, on voit très bien l'augmentation du temps de calcul en n'ajoutant que 11 clients aux graphes de 5$\times$5 pour arriver aux graphes 6$\times$6, le rapport est plus grand que 10. Le rapport pour n=3 reste proche de 10. Lorsqu'on diminue le nombre de fournisseurs dans le graphe, la solution est atteinte plus vite. Ceci est due à la diminution des combinations d'allocations : les différents set $N_{j}$ ont moins d'intersections entre eux vu l'écart entre les fournisseurs. Si on avait mis une valeur moins élevée pour $D_{max}$, ce phénomène serait encore plus prononcé.\newline \indent
+Pour les graphes 7$\times$7, on a une augmentation énorme du temps de calcul en comparaison avec les graphes 6$\times$6. Vu le temps de calcul minimum étant de 36.18 secondes CPU et le temps de calcul maximal étant de 62106.7 secondes CPU, ainsi que le nombre  d'instances générées assez bas ne me permettent pas de donner une interprétation significative.
 \section{Conclusion et perspectives}
+Étant donné que l'algorithme traité dans ce travail est un algorithme exact, la solution trouvée est toujours optimale, donc la résolution du problème prend plus de temps qu'une heuristique. Vu que l'algorithme ne s'arrête que lorsque la méthode des plans coupants s'arrête, c'est à ce niveau là où on pourrait améliorer l'approche. Une version de la méthode des plans coupants combinée avec une heuristique ou une métaheuristique pourrait être une solution.\newline \indent
+Comme déjà mentionné, avoir une grande marge est important pour le réseau pour pouvoir répondre aux augmentations spontanées de la demande. Les résultats expérimentaux montrent pourquoi : relancer l'algorithme pour trouver une nouvelle configuration admissible prend beaucoup trop de temps. Ici on n'a que des graphes très petits, en réalité les dimensions des réseaux sont plus grandes. Les réseaux traditionnels n'ont que très peu de fournisseurs, or l'augmentation des modules solaires sur les toits d'immeubles n'est qu'un seul exemple où on introduit un nouveau fournisseur dans le réseau qui non seulement multiplie le nombre de configurations possibles, mais aussi déstabilise le réseau vu sa production non prédictible. 
 
-\pagebreak
-\begin{FFigure}
-	\centering
-    \includegraphics[height=23cm]{flowChartAlgo.pdf}
+\begin{figure}[h]
+    \centering
+    \includegraphics[height=17cm]{flowChartAlgo.pdf}
     \captionof{figure}{Flowchart du \textit{cutting plane} algorithme}\label{fig:algo}
-\end{FFigure}
-\pagebreak
+\end{figure}
+
 \bibliographystyle{apalike}
 
-\begin{thebibliography}{20}
-\bibitem{Rossi}
-André Rossi, Alexis Aubry, Mireille Jacomino, Connectivity-and-hop-constrained design of electricity distribution networks,  \textit{European Journal of Operational Research}, 218 2012, 48-57
-\end{thebibliography}
-\end{multicols}
+\bibliography{rapport}
 \end{document}
